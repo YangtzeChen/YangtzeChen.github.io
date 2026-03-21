@@ -3,27 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>后台管理 — YangtzeChen</title>
+  <title>后台管理 — 500px Style CMS</title>
+
   <style>
-    body { margin: 0; }
-    /* Sveltia CMS variables for transparent image previews */
-    :root {
-      --sui-image-checkerboard: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
-      --sui-image-checkerboard-position: 0 0, 10px 10px;
-      --sui-image-checkerboard-size: 20px 20px;
+    /* ============================================================
+       DECAP CMS 500PX / MEDIUM AESTHETIC OVERRIDE
+       ============================================================ */
+    body {
+      background-color: #fafafa !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
+    }
+
+    /* Top Nav Bar */
+    [class*="AppHeader"] {
+      box-shadow: none !important;
+      border-bottom: 1px solid #eaeaea !important;
+      background-color: #fff !important;
+    }
+
+    /* Editor Main Container */
+    [class*="EditorContainer"] {
+      max-width: 900px !important;
+      margin: 40px auto !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.04) !important;
+      border-radius: 12px !important;
+      background: #fff !important;
+      border: none !important;
+      padding: 20px !important;
     }
     
-    /* Target Sveltia preview image containers */
-    .sveltiacms-image-preview,
-    [data-widget="image"] img {
-      background-color: var(--sui-image-checkerboard-bg, #fff);
-      background-image: var(--sui-image-checkerboard);
-      background-position: var(--sui-image-checkerboard-position);
-      background-size: var(--sui-image-checkerboard-size);
+    /* Remove Borders from typical Control Widgets */
+    [class*="ControlContainer"] {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      margin-bottom: 25px !important;
+      padding: 0 !important;
     }
+    
+    [class*="ControlContainer"] > div {
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Label Typogrpahy */
+    [class*="FieldLabel"] {
+      font-size: 13px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+      color: #888 !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* Inputs */
+    input[type="text"], textarea {
+      border: 1px solid #efefef !important;
+      border-radius: 6px !important;
+      background: #fdfdfd !important;
+      padding: 12px 15px !important;
+      font-size: 16px !important;
+      transition: all 0.2s ease !important;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: #ccc !important;
+      outline: none !important;
+      background: #fff !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    }
+
+    /* ============================================================
+       Medium.com Style Markdown Editor 
+       ============================================================ */
+    [class*="MarkdownControl"] {
+      border: none !important;
+    }
+    [class*="MarkdownControl"] [data-slate-editor] {
+      font-family: Georgia, serif !important;
+      font-size: 19px !important;
+      line-height: 1.8 !important;
+      color: #222 !important;
+      padding: 20px 0 !important;
+    }
+
+    /* ============================================================
+       500px Style Gallery Upload Grid 
+       ============================================================ */
+    /* Target the List Editor Container to display as Flex Grid */
+    [class*="ListControl"] > div:nth-child(2) {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 20px !important;
+      align-items: flex-start !important;
+    }
+
+    /* Each Individual Upload Block in the List */
+    [class*="ListItemTopBar"] { display: none !important; } /* Hide the ugly top drag bar */
+    [class*="ObjectControl"] {
+      flex: 1 1 280px !important;
+      max-width: 320px !important;
+      background: #fff !important;
+      border: 1px solid #eaeaea !important;
+      border-radius: 8px !important;
+      padding: 15px !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
+      transition: box-shadow 0.3s ease !important;
+    }
+    [class*="ObjectControl"]:hover {
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important;
+      border-color: #ddd !important;
+    }
+
+    /* ============================================================
+       Checkerboard Transparency Fix
+       ============================================================ */
+    /* Target the image wrapper inside Decap */
+    [class*="ImageWrapper"], [class*="ImageControl"] img {
+      background-color: #e5e5e5 !important;
+      background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee) !important;
+      background-position: 0 0, 10px 10px !important;
+      background-size: 20px 20px !important;
+      border-radius: 6px !important;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05) !important;
+    }
+
   </style>
 </head>
 <body>
-  <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
+  <script src="https://unpkg.com/decap-cms@^3.0/dist/decap-cms.js"></script>
 </body>
 </html>
