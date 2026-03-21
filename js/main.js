@@ -148,7 +148,6 @@
         <h1>${meta.title || slug}</h1>
         <div class="post-meta-row">
           <p class="post-card-date">${formatDate(meta.date)}</p>
-          <a class="post-edit-link" href="/admin/#/collections/blog/entries/${slug}" target="_blank" rel="noopener" title="在后台编辑此文章">✏️ 编辑</a>
         </div>
       `;
       postBody.innerHTML = marked.parse(body);
@@ -167,13 +166,12 @@
     });
   }
 
-  // ---- Gallery: Load Instagram-style Feed ----
+  // ---- Gallery: Unsplash-style Masonry Grid ----
   async function loadGallery() {
     const grid = document.getElementById('gallery-grid');
     if (!grid) return;
     
-    // Change id/class for clarity if needed, but we'll just inject the feed
-    grid.className = 'gallery-feed';
+    grid.className = 'gallery-masonry';
 
     try {
       const res = await fetch('/content/gallery/index.json');
@@ -192,110 +190,26 @@
         return;
       }
 
-      posts.forEach((post, index) => {
+      posts.forEach((post) => {
         if (!post.images || post.images.length === 0) return;
         
-        const article = document.createElement('article');
-        article.className = 'gallery-post fade-in';
-        
-        // 1. Build Media (Carousel)
-        const mediaDiv = document.createElement('div');
-        mediaDiv.className = 'gallery-post-media';
-        
-        const carousel = document.createElement('div');
-        carousel.className = 'gallery-carousel';
-        
         post.images.forEach((imgObj) => {
+          if (!imgObj.image) return;
+          
           const item = document.createElement('div');
-          item.className = 'gallery-carousel-item';
-          item.innerHTML = `<img src="${imgObj.image}" alt="${imgObj.sub_title || post.title || ''}" loading="lazy">`;
-          carousel.appendChild(item);
+          item.className = 'masonry-item fade-in';
+          
+          item.innerHTML = `
+            <img src="${imgObj.image}" alt="${imgObj.sub_title || post.title || ''}" loading="lazy">
+            <div class="masonry-overlay">
+              <span class="masonry-title">${imgObj.sub_title || post.title || '无题'}</span>
+            </div>
+          `;
+          
+          item.addEventListener('click', () => openDetailView(imgObj, post));
+          grid.appendChild(item);
+          requestAnimationFrame(() => item.classList.add('visible'));
         });
-        
-        mediaDiv.appendChild(carousel);
-        
-        // Navigation and Dots if > 1 image
-        let dotsContainer = null;
-        let updateSubInfo = null; // function to update the info side
-
-        if (post.images.length > 1) {
-          const prevBtn = document.createElement('button');
-          prevBtn.className = 'gallery-nav prev';
-          prevBtn.innerHTML = '❮';
-          prevBtn.disabled = true;
-          
-          const nextBtn = document.createElement('button');
-          nextBtn.className = 'gallery-nav next';
-          nextBtn.innerHTML = '❯';
-          
-          dotsContainer = document.createElement('div');
-          dotsContainer.className = 'gallery-dots';
-          post.images.forEach((_, i) => {
-            const dot = document.createElement('div');
-            dot.className = 'gallery-dot' + (i === 0 ? ' active' : '');
-            dotsContainer.appendChild(dot);
-          });
-          
-          mediaDiv.appendChild(prevBtn);
-          mediaDiv.appendChild(nextBtn);
-          mediaDiv.appendChild(dotsContainer);
-          
-          const updateNav = () => {
-             const idx = Math.round(carousel.scrollLeft / carousel.clientWidth);
-             prevBtn.disabled = idx === 0;
-             nextBtn.disabled = idx === post.images.length - 1;
-             Array.from(dotsContainer.children).forEach((d, i) => d.classList.toggle('active', i === idx));
-             if (updateSubInfo) updateSubInfo(idx);
-          };
-          
-          carousel.addEventListener('scroll', () => {
-             // Use requestAnimationFrame to throttle
-             window.requestAnimationFrame(updateNav);
-          });
-          
-          prevBtn.onclick = () => carousel.scrollBy({ left: -carousel.clientWidth, behavior: 'smooth' });
-          nextBtn.onclick = () => carousel.scrollBy({ left: carousel.clientWidth, behavior: 'smooth' });
-        }
-
-        // 2. Build Info Area
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'gallery-post-info';
-        
-        const header = `
-          <div class="gallery-post-header">
-            <h2 class="gallery-post-title">${post.title || '相册分享'}</h2>
-            <div class="gallery-post-date">${formatDate(post.date)}</div>
-          </div>
-          ${post.caption ? '<div class="gallery-post-caption">' + post.caption.replace(/\\n/g, '<br>') + '</div>' : ''}
-        `;
-        
-        const subInfoDiv = document.createElement('div');
-        subInfoDiv.className = 'gallery-sub-info';
-        
-        updateSubInfo = (idx) => {
-          const currentImg = post.images[idx];
-          if (currentImg.sub_title || currentImg.sub_caption) {
-             subInfoDiv.style.display = 'block';
-             subInfoDiv.innerHTML = `
-               ${currentImg.sub_title ? '<div class="gallery-sub-title">' + currentImg.sub_title + '</div>' : ''}
-               ${currentImg.sub_caption ? '<div class="gallery-sub-caption">' + currentImg.sub_caption.replace(/\\n/g, '<br>') + '</div>' : ''}
-             `;
-          } else {
-             subInfoDiv.style.display = 'none';
-          }
-        };
-        
-        // Initialize sub-info for the first image
-        updateSubInfo(0);
-        
-        infoDiv.innerHTML = header;
-        infoDiv.appendChild(subInfoDiv);
-        
-        article.appendChild(mediaDiv);
-        article.appendChild(infoDiv);
-        
-        grid.appendChild(article);
-        requestAnimationFrame(() => article.classList.add('visible'));
       });
     } catch {
       grid.innerHTML = `
@@ -307,45 +221,111 @@
     }
   }
 
-  // ---- Lightbox ----
-  function openLightbox(src, caption) {
-    const lb = document.getElementById('lightbox');
-    const lbImg = document.getElementById('lightbox-img');
-    const lbCap = document.getElementById('lightbox-caption');
-    if (!lb) return;
-    lbImg.src = src;
-    lbImg.alt = caption || '';
-    lbCap.textContent = caption || '';
+  // ---- Homepage: Latest Photography ----
+  async function loadLatestPhotography() {
+    const container = document.getElementById('latest-photography');
+    if (!container) return;
+
+    try {
+      const res = await fetch('/content/gallery/index.json');
+      if (!res.ok) throw new Error('not found');
+      const posts = await res.json();
+      
+      container.innerHTML = '';
+      
+      // Extract latest 6 images across all posts
+      let latestImages = [];
+      for (const p of posts) {
+        if (p.images) {
+          p.images.forEach(img => latestImages.push({ post: p, img: img }));
+        }
+      }
+      latestImages = latestImages.slice(0, 8);
+
+      if (latestImages.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">暂无相片</p>';
+        return;
+      }
+
+      latestImages.forEach((data) => {
+        const item = document.createElement('div');
+        item.className = 'mosaic-item fade-in';
+        item.innerHTML = `<img src="${data.img.image}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">`;
+        item.addEventListener('click', () => openDetailView(data.img, data.post));
+        container.appendChild(item);
+        requestAnimationFrame(() => item.classList.add('visible'));
+      });
+    } catch {
+      container.innerHTML = '<p class="text-center text-muted">暂无相片</p>';
+    }
+  }
+
+  // ---- 500px Style Advanced Lightbox (Detail View) ----
+  function openDetailView(imgObj, postObj) {
+    let lb = document.getElementById('advanced-lightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'advanced-lightbox';
+      lb.className = 'advanced-lightbox';
+      lb.innerHTML = `
+        <button class="adv-lb-close" id="adv-lb-close" aria-label="Close">✕</button>
+        <div class="adv-lb-content">
+          <div class="adv-lb-media">
+            <img id="adv-lb-img" src="" alt="">
+          </div>
+          <div class="adv-lb-info">
+            <h2 id="adv-lb-title"></h2>
+            <div class="adv-lb-meta" id="adv-lb-date"></div>
+            <div class="adv-lb-caption" id="adv-lb-caption"></div>
+            
+            <div class="adv-lb-subinfo" id="adv-lb-subinfo"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(lb);
+      document.getElementById('adv-lb-close').addEventListener('click', closeDetailView);
+      lb.addEventListener('click', (e) => {
+        if (e.target.classList.contains('adv-lb-media') || e.target === lb) closeDetailView();
+      });
+    }
+
+    document.getElementById('adv-lb-img').src = imgObj.image;
+    document.getElementById('adv-lb-title').textContent = postObj.title || '相册分享';
+    document.getElementById('adv-lb-date').textContent = formatDate(postObj.date);
+    document.getElementById('adv-lb-caption').innerHTML = postObj.caption ? postObj.caption.replace(/\\n/g, '<br>') : '';
+    
+    const subinfo = document.getElementById('adv-lb-subinfo');
+    if (imgObj.sub_title || imgObj.sub_caption) {
+      subinfo.style.display = 'block';
+      subinfo.innerHTML = `
+        ${imgObj.sub_title ? '<h4>' + imgObj.sub_title + '</h4>' : ''}
+        ${imgObj.sub_caption ? '<p>' + imgObj.sub_caption.replace(/\\n/g, '<br>') + '</p>' : ''}
+      `;
+    } else {
+      subinfo.style.display = 'none';
+    }
+
     lb.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
 
-  function closeLightbox() {
-    const lb = document.getElementById('lightbox');
+  function closeDetailView() {
+    const lb = document.getElementById('advanced-lightbox');
     if (!lb) return;
     lb.classList.remove('active');
     document.body.style.overflow = '';
   }
 
-  const lbClose = document.getElementById('lightbox-close');
-  if (lbClose) lbClose.addEventListener('click', closeLightbox);
-
-  const lb = document.getElementById('lightbox');
-  if (lb) {
-    lb.addEventListener('click', (e) => {
-      if (e.target === lb) closeLightbox();
-    });
-  }
-
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Escape') closeDetailView();
   });
 
   // ---- Router ----
   const page = window.location.pathname;
 
-  // Homepage: load latest 3 posts
+  // Homepage: load latest components
   if (page === '/' || page === '/index.html') {
+    loadLatestPhotography();
     loadPosts('latest-posts', 3);
   }
 

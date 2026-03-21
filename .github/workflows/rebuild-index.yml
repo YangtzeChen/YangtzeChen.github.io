@@ -48,14 +48,21 @@ jobs:
           mkdir -p items
           python3 -c "
           import os, json
-          files = [f for f in os.listdir('items') if f.endswith('.json')] if os.path.exists('items') else []
           out = []
-          for f in files:
-              try:
-                  with open(os.path.join('items', f), 'r', encoding='utf-8') as file:
-                      data = json.load(file)
-                  if data: out.append(data)
-              except Exception: pass
+          for root, dirs, files in os.walk('items'):
+              for f in files:
+                  if f == 'index.json':
+                      try:
+                          with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
+                              data = json.load(file)
+                          if data:
+                              if 'images' in data:
+                                  for img in data['images']:
+                                      if img.get('image') and not img['image'].startswith('/'):
+                                          img['image'] = '/content/gallery/' + root.replace(r'\\', '/') + '/' + img['image']
+                              out.append(data)
+                      except Exception: pass
+          out.sort(key=lambda x: x.get('date', ''), reverse=True)
           with open('index.json', 'w', encoding='utf-8') as w:
               json.dump(out, w, indent=2, ensure_ascii=False)
           "
