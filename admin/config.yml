@@ -28,11 +28,8 @@ collections:
   - name: "gallery"
     label: "相册"
     folder: "content/gallery/items"
-    path: "{{slug}}/index"
-    media_folder: ""
-    public_folder: ""
     create: true
-    slug: "{{slug}}"
+    slug: "{{year}}-{{month}}-{{day}}-{{hour}}{{minute}}-{{slug}}"
     extension: "json"
     format: "json"
     view_style: "grid"

@@ -1,5 +1,16 @@
 # 版本修改说明
 
+## V2.1.0 — 2026-03-22
+
+### ✨ 架构重构 & Sveltia CMS 升级
+
+- **Sveltia CMS 强效赋能**：放弃了陈旧的 Decap CMS，全面迁移至基于 Svelte 框架的全新一代 [Sveltia CMS](https://github.com/sveltia/sveltia-cms)。带来极度美观的全黑白暗色系 UI、完全所见即所得的 Markdown 行内编辑，并支持**沉浸式拖拽传图**，彻底抛弃割裂的“图片区块”感，真正对齐 500px/Unsplash 的高端编辑体验。
+- **强制唯一图群索引 (Data Architecture)**：修复了点击新建相册可能覆盖旧相册的风险。相册标识符 (Slug) 的生成规则重置为精确到分的 `{{year}}-{{month}}-{{day}}-{{hour}}{{minute}}-{{slug}}`，保证每次生成的独立隔离。
+- **Git 防冲突同步机制**：受益于 Sveltia 的原生 File System / Git Tree 解析引擎，后台现在会在执行任意覆写操作前强行校验抓取 Origin 最新节点，极大降低了前端编辑和 GitHub 仓库原生编辑的冲突率。
+- **缩略图路径修正**：重置了全局 `media_folder` 映射关系，彻底修复了后台历史相册封面白屏（无法解析）的历史遗留问题。
+- **智能透明修复加载**：保留并重做了透明 PNG 专用的 Checkerboard 灰白相间底层 CSS 逻辑，这次完美嵌入了 Sveltia 自定义的预览上下文中。
+
+---
 ## V2.0.0 — 2026-03-22
 
 ### ✨ 新增功能 & UI 重构 (500px/Unsplash 风格)

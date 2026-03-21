@@ -6,192 +6,24 @@
   <title>后台管理 — YangtzeChen</title>
   <style>
     body { margin: 0; }
+    /* Sveltia CMS variables for transparent image previews */
+    :root {
+      --sui-image-checkerboard: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
+      --sui-image-checkerboard-position: 0 0, 10px 10px;
+      --sui-image-checkerboard-size: 20px 20px;
+    }
+    
+    /* Target Sveltia preview image containers */
+    .sveltiacms-image-preview,
+    [data-widget="image"] img {
+      background-color: var(--sui-image-checkerboard-bg, #fff);
+      background-image: var(--sui-image-checkerboard);
+      background-position: var(--sui-image-checkerboard-position);
+      background-size: var(--sui-image-checkerboard-size);
+    }
   </style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0/dist/decap-cms.js"></script>
-  
-  <style>
-    /* Custom CSS to inject the '+' card smoothly without layout disruption */
-    .nc-collectionPage-cardsGrid {
-      position: relative;
-    }
-    .custom-add-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 240px;
-      background: #fcfcfc;
-      border: 2px dashed #ccc;
-      border-radius: 5px;
-      text-decoration: none;
-      color: #888;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    .custom-add-card:hover {
-      background: #f4f4f4;
-      border-color: #888;
-      color: #333;
-    }
-    .custom-add-card-icon {
-      font-size: 48px;
-      font-weight: 300;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .custom-add-card-text {
-      font-size: 14px;
-      font-weight: 500;
-    }
-    /* Hide the injected card when not on the gallery grid */
-    body:not(.on-gallery-collection) .custom-add-card-container {
-      display: none !important;
-    }
-  </style>
-  <script>
-    // MutationObserver to spot the CMS Grid and insert the '+' card
-    const observer = new MutationObserver((mutations) => {
-      // Check if we are on the gallery collection route
-      const hash = window.location.hash;
-      if (hash.includes('/collections/gallery') && !hash.includes('/entries/')) {
-        document.body.classList.add('on-gallery-collection');
-      } else {
-        document.body.classList.remove('on-gallery-collection');
-        return;
-      }
-
-      const grids = document.querySelectorAll('[class*="CardsGrid"]');
-      if (grids.length > 0) {
-        const grid = grids[0];
-        // Inject if it's not already there
-        if (!document.getElementById('custom-add-gallery-btn')) {
-          const addContainer = document.createElement('li');
-          addContainer.id = 'custom-add-gallery-btn';
-          addContainer.className = 'custom-add-card-container ' + (grid.firstElementChild ? grid.firstElementChild.className : '');
-          
-          addContainer.innerHTML = `
-            <a href="#/collections/gallery/entries/new" class="custom-add-card">
-              <span class="custom-add-card-icon">+</span>
-              <span class="custom-add-card-text">发布新图组</span>
-            </a>
-          `;
-          grid.insertBefore(addContainer, grid.firstChild);
-        }
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Also listen to hash changes just in case
-    window.addEventListener('hashchange', () => {
-      const hash = window.location.hash;
-      if (hash.includes('/collections/gallery') && !hash.includes('/entries/')) {
-        document.body.classList.add('on-gallery-collection');
-      } else {
-        document.body.classList.remove('on-gallery-collection');
-      }
-    });
-
-    // --- Custom CMS Preview Template for Gallery ---
-    const GalleryPreview = createClass({
-      render: function() {
-        const entry = this.props.entry;
-        const getAsset = this.props.getAsset;
-        
-        const title = entry.getIn(['data', 'title'], '未命名图组');
-        const date = entry.getIn(['data', 'date'], 'YYYY-MM-DD');
-        const caption = entry.getIn(['data', 'caption'], '');
-        const imagesNode = entry.getIn(['data', 'images']);
-        const images = imagesNode ? imagesNode.toJS() : [];
-
-        // Main preview wrapper styles
-        const wrapStyle = {
-          fontFamily: 'sans-serif',
-          background: '#fafafa',
-          padding: '20px',
-          minHeight: '100%',
-          boxSizing: 'border-box'
-        };
-        
-        const postStyle = {
-          display: 'flex',
-          flexDirection: 'column',
-          background: '#fff',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          maxWidth: '800px',
-          margin: '0 auto',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          overflow: 'hidden'
-        };
-
-        const mediaStyle = {
-          position: 'relative',
-          backgroundColor: '#e5e5e5',
-          backgroundImage: 'linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee)',
-          backgroundPosition: '0 0, 10px 10px',
-          backgroundSize: '20px 20px',
-        };
-        
-        const imgStyle = {
-          width: '100%',
-          maxHeight: '400px',
-          objectFit: 'contain',
-          display: 'block'
-        };
-        
-        const infoStyle = {
-          padding: '20px',
-          borderTop: '1px solid #ddd'
-        };
-
-        const headerStyle = {
-          borderBottom: '1px solid #eee',
-          paddingBottom: '15px',
-          marginBottom: '15px'
-        };
-        
-        const subInfoStyle = {
-          marginTop: '15px',
-          paddingTop: '15px',
-          borderTop: '1px dashed #eee'
-        };
-
-        // Render purely the first image as a preview representation, or a placeholder if empty
-        const mainImageObj = images.length > 0 ? images[0] : null;
-        let mainImgUrl = mainImageObj && mainImageObj.image ? getAsset(mainImageObj.image).toString() : '';
-
-        return h('div', {style: wrapStyle}, 
-          h('div', {style: postStyle}, 
-            h('div', {style: mediaStyle},
-              mainImgUrl ? h('img', {style: imgStyle, src: mainImgUrl}) : h('div', {style: {color: '#888', padding: '100px 0', textAlign: 'center'}}, '请在左侧上传或者添加图片')
-            ),
-            h('div', {style: infoStyle},
-              h('div', {style: headerStyle}, 
-                h('h3', {style: {margin: '0 0 5px 0', fontSize: '18px'}}, title),
-                h('div', {style: {fontSize: '12px', color: '#888'}}, String(date))
-              ),
-              h('div', {style: {fontSize: '14px', lineHeight: '1.6', color: '#333'}}, caption),
-              
-              // If there are images with sub-info, show the info of the first one as representative
-              mainImageObj && (mainImageObj.sub_title || mainImageObj.sub_caption) ? 
-                h('div', {style: subInfoStyle},
-                  mainImageObj.sub_title ? h('div', {style: {fontWeight: 'bold', fontSize: '13px', color: '#7C9A82', marginBottom: '5px'}}, mainImageObj.sub_title) : null,
-                  mainImageObj.sub_caption ? h('div', {style: {fontSize: '13px', color: '#666'}}, mainImageObj.sub_caption) : null
-                )
-              : null,
-              
-              images.length > 1 ? h('div', {style: {marginTop: '15px', fontSize: '12px', color: '#999', textAlign: 'center'}}, `(预览模式仅展示首张，共有 ${images.length} 张图片)`) : null
-            )
-          )
-        );
-      }
-    });
-    
-    CMS.registerPreviewTemplate("gallery", GalleryPreview);
-
-  </script>
+  <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js"></script>
 </body>
 </html>
