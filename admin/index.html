@@ -93,6 +93,102 @@
         document.body.classList.remove('on-gallery-collection');
       }
     });
+
+    // --- Custom CMS Preview Template for Gallery ---
+    const GalleryPreview = createClass({
+      render: function() {
+        const entry = this.props.entry;
+        const getAsset = this.props.getAsset;
+        
+        const title = entry.getIn(['data', 'title'], '未命名图组');
+        const date = entry.getIn(['data', 'date'], 'YYYY-MM-DD');
+        const caption = entry.getIn(['data', 'caption'], '');
+        const imagesNode = entry.getIn(['data', 'images']);
+        const images = imagesNode ? imagesNode.toJS() : [];
+
+        // Main preview wrapper styles
+        const wrapStyle = {
+          fontFamily: 'sans-serif',
+          background: '#fafafa',
+          padding: '20px',
+          minHeight: '100%',
+          boxSizing: 'border-box'
+        };
+        
+        const postStyle = {
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          maxWidth: '800px',
+          margin: '0 auto',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          overflow: 'hidden'
+        };
+
+        const mediaStyle = {
+          background: '#000',
+          position: 'relative'
+        };
+        
+        const imgStyle = {
+          width: '100%',
+          maxHeight: '400px',
+          objectFit: 'contain',
+          display: 'block'
+        };
+        
+        const infoStyle = {
+          padding: '20px',
+          borderTop: '1px solid #ddd'
+        };
+
+        const headerStyle = {
+          borderBottom: '1px solid #eee',
+          paddingBottom: '15px',
+          marginBottom: '15px'
+        };
+        
+        const subInfoStyle = {
+          marginTop: '15px',
+          paddingTop: '15px',
+          borderTop: '1px dashed #eee'
+        };
+
+        // Render purely the first image as a preview representation, or a placeholder if empty
+        const mainImageObj = images.length > 0 ? images[0] : null;
+        let mainImgUrl = mainImageObj && mainImageObj.image ? getAsset(mainImageObj.image).toString() : '';
+
+        return h('div', {style: wrapStyle}, 
+          h('div', {style: postStyle}, 
+            h('div', {style: mediaStyle},
+              mainImgUrl ? h('img', {style: imgStyle, src: mainImgUrl}) : h('div', {style: {color: '#888', padding: '100px 0', textAlign: 'center'}}, '请在左侧上传或者添加图片')
+            ),
+            h('div', {style: infoStyle},
+              h('div', {style: headerStyle}, 
+                h('h3', {style: {margin: '0 0 5px 0', fontSize: '18px'}}, title),
+                h('div', {style: {fontSize: '12px', color: '#888'}}, String(date))
+              ),
+              h('div', {style: {fontSize: '14px', lineHeight: '1.6', color: '#333'}}, caption),
+              
+              // If there are images with sub-info, show the info of the first one as representative
+              mainImageObj && (mainImageObj.sub_title || mainImageObj.sub_caption) ? 
+                h('div', {style: subInfoStyle},
+                  mainImageObj.sub_title ? h('div', {style: {fontWeight: 'bold', fontSize: '13px', color: '#7C9A82', marginBottom: '5px'}}, mainImageObj.sub_title) : null,
+                  mainImageObj.sub_caption ? h('div', {style: {fontSize: '13px', color: '#666'}}, mainImageObj.sub_caption) : null
+                )
+              : null,
+              
+              images.length > 1 ? h('div', {style: {marginTop: '15px', fontSize: '12px', color: '#999', textAlign: 'center'}}, `(预览模式仅展示首张，共有 ${images.length} 张图片)`) : null
+            )
+          )
+        );
+      }
+    });
+    
+    CMS.registerPreviewTemplate("gallery", GalleryPreview);
+
   </script>
 </body>
 </html>

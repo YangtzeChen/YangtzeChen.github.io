@@ -33,12 +33,16 @@ collections:
     extension: "json"
     format: "json"
     view_style: "grid"
+    summary: "{{title}} — {{date}} (共 {{images.length}} 张图片)"
     fields:
       - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
-      - { label: "图组标题", name: "title", widget: "string" }
-      - { label: "描述", name: "caption", widget: "string", required: false }
+      - { label: "图组主标题", name: "title", widget: "string", default: "新的相册" }
+      - { label: "图组主描述", name: "caption", widget: "string", required: false }
       - label: "图片列表"
         name: "images"
         widget: "list"
+        summary: "{{fields.sub_title}}"
         fields:
           - { label: "图片", name: "image", widget: "image" }
+          - { label: "子标题", name: "sub_title", widget: "string", required: false }
+          - { label: "子描述", name: "sub_caption", widget: "string", required: false }
