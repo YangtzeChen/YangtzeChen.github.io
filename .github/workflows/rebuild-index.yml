@@ -37,15 +37,7 @@ jobs:
               echo "," >> index.json.tmp
             fi
             
-            cat >> index.json.tmp <<ENTRY
-  {
-    "slug": "$slug",
-    "title": "$title",
-    "date": "$date",
-    "excerpt": "$excerpt",
-    "thumbnail": "$thumbnail"
-  }
-          ENTRY
+            printf '{\n  "slug": "%s",\n  "title": "%s",\n  "date": "%s",\n  "excerpt": "%s",\n  "thumbnail": "%s"\n}' "$slug" "$title" "$date" "$excerpt" "$thumbnail" >> index.json.tmp
           done
           echo "]" >> index.json.tmp
           mv index.json.tmp index.json
@@ -73,13 +65,7 @@ jobs:
               echo "," >> index.json.tmp
             fi
             
-            cat >> index.json.tmp <<ENTRY
-  {
-    "image": "$image",
-    "caption": "$caption",
-    "date": "$date"
-  }
-          ENTRY
+            printf '{\n  "image": "%s",\n  "caption": "%s",\n  "date": "%s"\n}' "$image" "$caption" "$date" >> index.json.tmp
           done
           echo "]" >> index.json.tmp
           mv index.json.tmp index.json
