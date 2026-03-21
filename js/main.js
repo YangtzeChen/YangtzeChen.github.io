@@ -146,7 +146,10 @@
 
       postHeader.innerHTML = `
         <h1>${meta.title || slug}</h1>
-        <p class="post-card-date">${formatDate(meta.date)}</p>
+        <div class="post-meta-row">
+          <p class="post-card-date">${formatDate(meta.date)}</p>
+          <a class="post-edit-link" href="/admin/#/collections/blog/entries/${slug}" target="_blank" rel="noopener" title="在后台编辑此文章">✏️ 编辑</a>
+        </div>
       `;
       postBody.innerHTML = marked.parse(body);
       document.title = `${meta.title || slug} — YangtzeChen`;

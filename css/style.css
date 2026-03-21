@@ -310,6 +310,31 @@ a:hover { color: var(--rose); }
   font-size: 0.85rem;
 }
 
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.post-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: all 0.3s var(--ease);
+}
+
+.post-edit-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(124, 154, 130, 0.08);
+}
+
 .post-content {
   max-width: 680px;
   margin: 0 auto;
