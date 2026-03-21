@@ -10,5 +10,89 @@
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0/dist/decap-cms.js"></script>
+  
+  <style>
+    /* Custom CSS to inject the '+' card smoothly without layout disruption */
+    .nc-collectionPage-cardsGrid {
+      position: relative;
+    }
+    .custom-add-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 240px;
+      background: #fcfcfc;
+      border: 2px dashed #ccc;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #888;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .custom-add-card:hover {
+      background: #f4f4f4;
+      border-color: #888;
+      color: #333;
+    }
+    .custom-add-card-icon {
+      font-size: 48px;
+      font-weight: 300;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .custom-add-card-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    /* Hide the injected card when not on the gallery grid */
+    body:not(.on-gallery-collection) .custom-add-card-container {
+      display: none !important;
+    }
+  </style>
+  <script>
+    // MutationObserver to spot the CMS Grid and insert the '+' card
+    const observer = new MutationObserver((mutations) => {
+      // Check if we are on the gallery collection route
+      const hash = window.location.hash;
+      if (hash.includes('/collections/gallery') && !hash.includes('/entries/')) {
+        document.body.classList.add('on-gallery-collection');
+      } else {
+        document.body.classList.remove('on-gallery-collection');
+        return;
+      }
+
+      const grids = document.querySelectorAll('[class*="CardsGrid"]');
+      if (grids.length > 0) {
+        const grid = grids[0];
+        // Inject if it's not already there
+        if (!document.getElementById('custom-add-gallery-btn')) {
+          const addContainer = document.createElement('li');
+          addContainer.id = 'custom-add-gallery-btn';
+          addContainer.className = 'custom-add-card-container ' + (grid.firstElementChild ? grid.firstElementChild.className : '');
+          
+          addContainer.innerHTML = `
+            <a href="#/collections/gallery/entries/new" class="custom-add-card">
+              <span class="custom-add-card-icon">+</span>
+              <span class="custom-add-card-text">发布新图组</span>
+            </a>
+          `;
+          grid.insertBefore(addContainer, grid.firstChild);
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Also listen to hash changes just in case
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash.includes('/collections/gallery') && !hash.includes('/entries/')) {
+        document.body.classList.add('on-gallery-collection');
+      } else {
+        document.body.classList.remove('on-gallery-collection');
+      }
+    });
+  </script>
 </body>
 </html>

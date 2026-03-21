@@ -563,6 +563,7 @@ a:hover { color: var(--rose); }
   text-align: center;
   padding: 4rem 0;
   color: var(--text-muted);
+  grid-column: 1 / -1;
 }
 
 .empty-state-icon {

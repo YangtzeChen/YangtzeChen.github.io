@@ -27,12 +27,18 @@ collections:
 
   - name: "gallery"
     label: "相册"
-    folder: "content/gallery"
+    folder: "content/gallery/items"
     create: true
     slug: "{{slug}}"
     extension: "json"
     format: "json"
+    view_style: "grid"
     fields:
-      - { label: "图片", name: "image", widget: "image" }
-      - { label: "描述", name: "caption", widget: "string", required: false }
       - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
+      - { label: "图组标题", name: "title", widget: "string" }
+      - { label: "描述", name: "caption", widget: "string", required: false }
+      - label: "图片列表"
+        name: "images"
+        widget: "list"
+        fields:
+          - { label: "图片", name: "image", widget: "image" }

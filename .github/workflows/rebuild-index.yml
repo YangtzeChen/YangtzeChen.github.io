@@ -20,55 +20,45 @@ jobs:
       - name: Rebuild blog index.json
         run: |
           cd content/blog
-          echo "[" > index.json.tmp
-          first=true
-          for f in *.md; do
-            [ "$f" = "*.md" ] && break
-            # Extract front-matter fields
-            title=$(sed -n 's/^title: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
-            date=$(sed -n 's/^date: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
-            excerpt=$(sed -n 's/^excerpt: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
-            thumbnail=$(sed -n 's/^thumbnail: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
-            slug="${f%.md}"
-            
-            if [ "$first" = true ]; then
-              first=false
-            else
-              echo "," >> index.json.tmp
-            fi
-            
-            printf '{\n  "slug": "%s",\n  "title": "%s",\n  "date": "%s",\n  "excerpt": "%s",\n  "thumbnail": "%s"\n}' "$slug" "$title" "$date" "$excerpt" "$thumbnail" >> index.json.tmp
-          done
-          echo "]" >> index.json.tmp
-          mv index.json.tmp index.json
+          python3 -c "
+          import os, json, re
+          files = [f for f in os.listdir('.') if f.endswith('.md')]
+          out = []
+          for f in files:
+              with open(f, 'r', encoding='utf-8') as file:
+                  content = file.read()
+              match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+              if match:
+                  meta = {}
+                  for line in match.group(1).split('\n'):
+                      if ':' in line:
+                          k, v = line.split(':', 1)
+                          k = k.strip()
+                          v = v.strip().strip('\"').strip('\'')
+                          meta[k] = v
+                  meta['slug'] = f[:-3]
+                  out.append(meta)
+          with open('index.json', 'w', encoding='utf-8') as w:
+              json.dump(out, w, indent=2, ensure_ascii=False)
+          "
 
       - name: Rebuild gallery index.json
         run: |
           cd content/gallery
-          echo "[" > index.json.tmp
-          first=true
-          for f in *.json; do
-            [ "$f" = "*.json" ] && continue
-            [ "$f" = "index.json" ] && continue
-            [ "$f" = "index.json.tmp" ] && continue
-            
-            # Read fields from individual JSON files created by CMS
-            image=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('image',''))" 2>/dev/null || echo "")
-            caption=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('caption',''))" 2>/dev/null || echo "")
-            date=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('date',''))" 2>/dev/null || echo "")
-            
-            [ -z "$image" ] && continue
-            
-            if [ "$first" = true ]; then
-              first=false
-            else
-              echo "," >> index.json.tmp
-            fi
-            
-            printf '{\n  "image": "%s",\n  "caption": "%s",\n  "date": "%s"\n}' "$image" "$caption" "$date" >> index.json.tmp
-          done
-          echo "]" >> index.json.tmp
-          mv index.json.tmp index.json
+          mkdir -p items
+          python3 -c "
+          import os, json
+          files = [f for f in os.listdir('items') if f.endswith('.json')] if os.path.exists('items') else []
+          out = []
+          for f in files:
+              try:
+                  with open(os.path.join('items', f), 'r', encoding='utf-8') as file:
+                      data = json.load(file)
+                  if data: out.append(data)
+              except Exception: pass
+          with open('index.json', 'w', encoding='utf-8') as w:
+              json.dump(out, w, indent=2, ensure_ascii=False)
+          "
 
       - name: Commit updated indexes
         run: |

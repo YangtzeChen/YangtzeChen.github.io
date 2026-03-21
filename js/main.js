@@ -189,16 +189,24 @@
         return;
       }
 
-      images.forEach((img) => {
-        const item = document.createElement('div');
-        item.className = 'gallery-item fade-in';
-        item.innerHTML = `
-          <img src="${img.image}" alt="${img.caption || ''}" loading="lazy">
-          ${img.caption ? `<div class="gallery-caption">${img.caption}</div>` : ''}
-        `;
-        item.addEventListener('click', () => openLightbox(img.image, img.caption));
-        grid.appendChild(item);
-        requestAnimationFrame(() => item.classList.add('visible'));
+      images.forEach((post) => {
+        if (!post.images || !Array.isArray(post.images)) return;
+        post.images.forEach((imgObj) => {
+          if (!imgObj.image) return;
+          const item = document.createElement('div');
+          item.className = 'gallery-item fade-in';
+          const titleHtml = post.title ? `<strong>${post.title}</strong><br>` : '';
+          const capText = post.caption || '';
+          const fullText = (titleHtml || capText) ? `<div class="gallery-caption">${titleHtml}${capText}</div>` : '';
+          
+          item.innerHTML = `
+            <img src="${imgObj.image}" alt="${post.title || ''}" loading="lazy">
+            ${fullText}
+          `;
+          item.addEventListener('click', () => openLightbox(imgObj.image, (post.title ? post.title + ' - ' : '') + capText));
+          grid.appendChild(item);
+          requestAnimationFrame(() => item.classList.add('visible'));
+        });
       });
     } catch {
       grid.innerHTML = `
