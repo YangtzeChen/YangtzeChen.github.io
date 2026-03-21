@@ -1,0 +1,93 @@
+name: Rebuild Content Index
+
+on:
+  push:
+    paths:
+      - 'content/blog/**'
+      - 'content/gallery/**'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild blog index.json
+        run: |
+          cd content/blog
+          echo "[" > index.json.tmp
+          first=true
+          for f in *.md; do
+            [ "$f" = "*.md" ] && break
+            # Extract front-matter fields
+            title=$(sed -n 's/^title: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
+            date=$(sed -n 's/^date: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
+            excerpt=$(sed -n 's/^excerpt: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
+            thumbnail=$(sed -n 's/^thumbnail: *"\?\(.*\)"\?$/\1/p' "$f" | head -1)
+            slug="${f%.md}"
+            
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> index.json.tmp
+            fi
+            
+            cat >> index.json.tmp <<ENTRY
+  {
+    "slug": "$slug",
+    "title": "$title",
+    "date": "$date",
+    "excerpt": "$excerpt",
+    "thumbnail": "$thumbnail"
+  }
+          ENTRY
+          done
+          echo "]" >> index.json.tmp
+          mv index.json.tmp index.json
+
+      - name: Rebuild gallery index.json
+        run: |
+          cd content/gallery
+          echo "[" > index.json.tmp
+          first=true
+          for f in *.json; do
+            [ "$f" = "*.json" ] && continue
+            [ "$f" = "index.json" ] && continue
+            [ "$f" = "index.json.tmp" ] && continue
+            
+            # Read fields from individual JSON files created by CMS
+            image=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('image',''))" 2>/dev/null || echo "")
+            caption=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('caption',''))" 2>/dev/null || echo "")
+            date=$(python3 -c "import json,sys; d=json.load(open('$f')); print(d.get('date',''))" 2>/dev/null || echo "")
+            
+            [ -z "$image" ] && continue
+            
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> index.json.tmp
+            fi
+            
+            cat >> index.json.tmp <<ENTRY
+  {
+    "image": "$image",
+    "caption": "$caption",
+    "date": "$date"
+  }
+          ENTRY
+          done
+          echo "]" >> index.json.tmp
+          mv index.json.tmp index.json
+
+      - name: Commit updated indexes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add content/blog/index.json content/gallery/index.json
+          git diff --cached --quiet || git commit -m "chore: rebuild content indexes"
+          git push

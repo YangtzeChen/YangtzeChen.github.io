@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>相册 — YangtzeChen</title>
+  <meta name="description" content="YangtzeChen 的摄影与画廊。">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="site-nav" id="site-nav">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo">YangtzeChen</a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="/">首页</a></li>
+        <li><a href="/blog/">文章</a></li>
+        <li><a href="/gallery/" class="active">相册</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Gallery -->
+  <section class="section">
+    <div class="container">
+      <h1 class="section-title fade-in">相册</h1>
+      <p class="section-subtitle fade-in">用镜头记录的瞬间</p>
+    </div>
+    <div class="container-wide">
+      <div class="gallery-grid" id="gallery-grid">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="" id="lightbox-img">
+    <p class="lightbox-caption" id="lightbox-caption"></p>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-social">
+        <a href="https://github.com/YangtzeChen" target="_blank" rel="noopener" aria-label="GitHub">GitHub</a>
+      </div>
+      <p>&copy; 2026 YangtzeChen. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

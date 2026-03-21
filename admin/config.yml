@@ -1,0 +1,38 @@
+backend:
+  name: github
+  repo: YangtzeChen/YangtzeChen.github.io
+  branch: main
+  base_url: https://sveltia-cms-auth.YangtzeChenw.workers.dev
+  # ↑ 部署 OAuth 代理后，替换为你的 Cloudflare Workers URL
+
+media_folder: "content/gallery/images"
+public_folder: "/content/gallery/images"
+
+locale: "zh_Hans"
+
+collections:
+  - name: "blog"
+    label: "博客文章"
+    folder: "content/blog"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
+      - { label: "摘要", name: "excerpt", widget: "text", required: false }
+      - { label: "封面图", name: "thumbnail", widget: "image", required: false }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  - name: "gallery"
+    label: "相册"
+    folder: "content/gallery"
+    create: true
+    slug: "{{slug}}"
+    extension: "json"
+    format: "json"
+    fields:
+      - { label: "图片", name: "image", widget: "image" }
+      - { label: "描述", name: "caption", widget: "string", required: false }
+      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
