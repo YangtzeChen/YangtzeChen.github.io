@@ -28,6 +28,8 @@
 ├── content/
 │   ├── blog/                  # 博客文章 (Markdown)
 │   └── gallery/               # 相册图片与数据
+├── docs/
+│   └── CHANGELOG.md           # 版本修改说明
 └── .github/workflows/
     └── rebuild-index.yml      # 自动重建内容索引
 ```
@@ -56,6 +58,10 @@
 | [Google Fonts](https://fonts.google.com/) | Noto Serif JP + Inter 字体 |
 | GitHub Actions | 内容索引自动更新 |
 | GitHub Pages | 静态站点托管 |
+
+## 📋 更新日志
+
+详见 👉 [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
 ## 📄 许可
 
