@@ -24,8 +24,8 @@ collections:
     summary: "{{title}} | CT: {{date}} | LT: {{updated}}"
     fields:
       - { label: "标题", name: "title", widget: "string", hint: "最多100字" }
-      - { label: "日期", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, default: "", required: false }
-      - { label: "更新时间", name: "updated", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, default: "", required: false }
+      - { label: "创建时间", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, default: "now" }
+      - { label: "更新时间", name: "updated", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, default: "now" }
       - { label: "草稿", name: "draft", widget: "boolean", default: true, hint: "草稿不会在前台显示" }
       - { label: "摘要", name: "excerpt", widget: "text", required: false, hint: "最多400字，用于后台卡片显示" }
       - { label: "封面图", name: "image", widget: "image", required: false }
