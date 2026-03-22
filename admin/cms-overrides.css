@@ -35,8 +35,13 @@ body {
   right: 0 !important;
   width: 100vw !important;
   height: 200px !important;
-  background: #f0f0f0 !important;
+  background: transparent !important;
   pointer-events: none !important;
+}
+
+/* Add margin-top to title label */
+[class*="ControlContainer"]:first-of-type label {
+  margin-top: 100px !important;
 }
 
 /* Editor Main Container */
