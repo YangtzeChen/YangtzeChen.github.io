@@ -214,7 +214,7 @@
 
     /* --- Card Image: forced 3:2 ratio, cover fill --- */
     [class*="GridCardLink"] [class*="CardImage"],
-    [class*="GridCardLink"] > div:first-child,
+    [class*="GridCardLink"] > div:first-child:not(:last-child),
     [class*="CardImageWrapper"] {
       aspect-ratio: 3 / 2 !important;
       width: 100% !important;

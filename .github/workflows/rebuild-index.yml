@@ -21,7 +21,7 @@ jobs:
         run: |
           mkdir -p content/blog
           cd content/blog
-          python3 -c "
+          cat << 'EOF' > builder.py
           import os, json, re
           try:
               files = [f for f in os.listdir('.') if f.endswith('.md')]
@@ -37,7 +37,7 @@ jobs:
                               if ':' in line:
                                   k, v = line.split(':', 1)
                                   k = k.strip()
-                                  v = v.strip().strip('\"').strip('\'')
+                                  v = v.strip().strip('"').strip("'")
                                   meta[k] = v
                           meta['slug'] = f[:-3]
                           out.append(meta)
@@ -50,13 +50,14 @@ jobs:
               print(f'Fatal error rebuilding blog index: {e}')
               with open('index.json', 'w', encoding='utf-8') as w:
                   w.write('[]')
-          "
+          EOF
+          python3 builder.py
 
       - name: Rebuild gallery index.json
         run: |
           mkdir -p content/gallery/items
           cd content/gallery
-          python3 -c "
+          cat << 'EOF' > builder.py
           import os, json
           try:
               out = []
@@ -70,7 +71,7 @@ jobs:
                                   if 'images' in data:
                                       for img in data['images']:
                                           if img.get('image') and not img['image'].startswith('/'):
-                                              img['image'] = '/content/gallery/' + root.replace('\\\\', '/') + '/' + img['image']
+                                              img['image'] = '/content/gallery/' + root.replace('\\', '/') + '/' + img['image']
                                   out.append(data)
                           except Exception as e:
                               print(f'Skipping file {f} due to error: {e}')
@@ -81,7 +82,8 @@ jobs:
               print(f'Fatal error rebuilding gallery index: {e}')
               with open('index.json', 'w', encoding='utf-8') as w:
                   w.write('[]')
-          "
+          EOF
+          python3 builder.py
 
       - name: Commit updated indexes
         run: |
