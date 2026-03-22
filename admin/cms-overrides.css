@@ -27,8 +27,8 @@ body {
 [class*="ControlContainer"]:first-of-type::before {
   content: '' !important;
   display: block !important;
-  height: 60px !important;
-  margin-bottom: -60px !important;
+  height: 200px !important;
+  margin-bottom: -200px !important;
   background: transparent !important;
   pointer-events: none !important;
 }
