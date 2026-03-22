@@ -263,7 +263,7 @@ body {
   white-space: nowrap !important;
 }
 
-/* --- Excerpt: two lines max, no truncate --- */
+/* --- Excerpt: two lines max --- */
 [class*="GridCardLink"] [class*="Excerpt"],
 [class*="GridCardLink"] .excerpt {
   font-size: 0.75rem !important;
@@ -275,19 +275,13 @@ body {
   overflow: hidden !important;
   white-space: normal !important;
 }
-  color: #6B6B6B !important;
-  line-height: 1.5 !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-}
 
 /* --- No image fallback: gradient matches frontend post-card --- */
 [class*="GridCardLink"]:not(:has(img)) {
   background: linear-gradient(135deg, #A8C5AE 0%, #F2F0EB 100%) !important;
 }
-[class*="GridCardLink"]:not(:has(img)) [class*="Summary"] {
+[class*="GridCardLink"]:not(:has(img)) [class*="Summary"],
+[class*="GridCardLink"]:not(:has(img)) > div:last-child {
   background: #fff !important;
 }
 
@@ -296,6 +290,13 @@ body {
 [class*="CollectionEntries"] li {
   border: none !important;
   list-style: none !important;
+}
+
+/* --- Ensure ALL text content stays inside card --- */
+[class*="GridCardLink"] > a,
+[class*="GridCardLink"] > div {
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 /* --- Ensure the "New" create button stays clean --- */
