@@ -21,7 +21,7 @@ collections:
     extension: "md"
     format: "frontmatter"
     view_style: "grid"
-    summary: "{{title}} | {{date}} | {{updated}}"
+    summary: "{{title}} | CT: {{date}} | LT: {{updated}}"
     fields:
       - { label: "标题", name: "title", widget: "string" }
       - { label: "日期", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
