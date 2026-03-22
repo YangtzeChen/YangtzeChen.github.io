@@ -161,6 +161,76 @@
     return FALLBACK_GRADIENTS[Math.abs(hash) % FALLBACK_GRADIENTS.length];
   }
 
+  // Parse color string to RGB object
+  function parseColor(colorStr) {
+    if (!colorStr) return null;
+    colorStr = colorStr.trim();
+
+    // Hex format: #RGB or #RRGGBB
+    let match = colorStr.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    if (match) {
+      return {
+        r: parseInt(match[1], 16),
+        g: parseInt(match[2], 16),
+        b: parseInt(match[3], 16)
+      };
+    }
+
+    // Hex format: #RGB (shorthand)
+    match = colorStr.match(/^#?([a-f\d])([a-f\d])([a-f\d])$/i);
+    if (match) {
+      return {
+        r: parseInt(match[1] + match[1], 16),
+        g: parseInt(match[2] + match[2], 16),
+        b: parseInt(match[3] + match[3], 16)
+      };
+    }
+
+    // RGB format: rgb(r, g, b)
+    match = colorStr.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+    if (match) {
+      return {
+        r: parseInt(match[1], 10),
+        g: parseInt(match[2], 10),
+        b: parseInt(match[3], 10)
+      };
+    }
+
+    return null;
+  }
+
+  // Calculate relative luminance for contrast ratio
+  function getLuminance(rgb) {
+    const [rs, gs, bs] = [rgb.r / 255, rgb.g / 255, rgb.b / 255];
+    const r = rs <= 0.03928 ? rs / 12.92 : Math.pow((rs + 0.055) / 1.055, 2.4);
+    const g = gs <= 0.03928 ? gs / 12.92 : Math.pow((gs + 0.055) / 1.055, 2.4);
+    const b = bs <= 0.03928 ? bs / 12.92 : Math.pow((bs + 0.055) / 1.055, 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  // Get contrasting text color (black or white)
+  function getContrastColor(colorStr, threshold = 0.5) {
+    const rgb = parseColor(colorStr);
+    if (!rgb) return null;
+
+    const luminance = getLuminance(rgb);
+    return luminance > threshold ? '#2C2C2C' : '#FFFFFF';
+  }
+
+  // Create gradient from cardColor
+  function getGradientFromColor(colorStr) {
+    if (!colorStr) return null;
+    const rgb = parseColor(colorStr);
+    if (!rgb) return null;
+
+    // Lighten the color for gradient end
+    const r = Math.min(255, rgb.r + 60);
+    const g = Math.min(255, rgb.g + 60);
+    const b = Math.min(255, rgb.b + 60);
+
+    return `linear-gradient(135deg, ${colorStr} 0%, rgb(${r},${g},${b}) 100%)`;
+  }
+
   function createPostCard(post, slug) {
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
@@ -168,10 +238,30 @@
     const timeHTML = post.updated
       ? `<span class="post-time-brief">LT ${formatDate(post.updated)}</span><span class="post-time-brief">CT ${formatDate(post.date)}</span>`
       : `<span class="post-time-brief">CT ${formatDate(post.date)}</span>`;
+
+    // Determine gradient and text color
+    let gradientStyle = '';
+    let textColorStyle = '';
+
+    if (post.image) {
+      // Has image - use default styling
+      gradientStyle = '';
+    } else if (post.cardColor) {
+      // Use custom card color for gradient
+      gradientStyle = 'background: ' + getGradientFromColor(post.cardColor) + ';';
+      const contrastColor = getContrastColor(post.cardColor, 0.5);
+      if (contrastColor) {
+        textColorStyle = 'color: ' + contrastColor + ';';
+      }
+    } else {
+      // Fallback to slug-based gradient
+      gradientStyle = 'background: ' + getGradientBySlug(slug) + ';';
+    }
+
     card.innerHTML = `
-      <div class="post-card-img-wrap" style="${!post.image ? 'background: ' + getGradientBySlug(slug) : ''}">
+      <div class="post-card-img-wrap" style="${gradientStyle}">
         ${imgHTML}
-        <div class="post-card-body">
+        <div class="post-card-body" style="${textColorStyle}">
           <p class="post-card-date">${timeHTML}</p>
           <h3 class="post-card-title">${post.title || '无标题'}</h3>
           <p class="post-card-excerpt">${post.excerpt || ''}</p>
@@ -185,7 +275,13 @@
         img.onerror = () => {
           img.remove();
           const wrap = card.querySelector('.post-card-img-wrap');
-          if (wrap) wrap.style.background = getGradientBySlug(slug);
+          if (wrap) {
+            if (post.cardColor) {
+              wrap.style.background = getGradientFromColor(post.cardColor);
+            } else {
+              wrap.style.background = getGradientBySlug(slug);
+            }
+          }
         };
       }
     }

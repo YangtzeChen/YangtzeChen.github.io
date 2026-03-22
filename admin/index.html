@@ -128,15 +128,47 @@
       }
     }
 
+    // B14: Color picker for cardColor field
+    function initColorPicker() {
+      const colorInput = document.querySelector('input[name="cardColor"]');
+      if (!colorInput) return;
+
+      // 如果已经有颜色选择器则跳过
+      if (colorInput.type === 'color') return;
+
+      // 转换为原生 color input
+      colorInput.type = 'color';
+      colorInput.style.width = '60px';
+      colorInput.style.height = '30px';
+      colorInput.style.border = '1px solid #ddd';
+      colorInput.style.borderRadius = '4px';
+      colorInput.style.cursor = 'pointer';
+
+      // 如果已有值，更新 picker 颜色
+      if (colorInput.value) {
+        colorInput.style.background = colorInput.value;
+      }
+
+      colorInput.addEventListener('input', () => {
+        colorInput.style.background = colorInput.value;
+      });
+
+      console.log('✓ Color picker initialized for cardColor');
+    }
+
     // 立即尝试，然后重复尝试
     initCharCount();
+    initColorPicker();
     setTimeout(initCharCount, 2000);
     setTimeout(initCharCount, 4000);
+    setTimeout(initColorPicker, 1500);
+    setTimeout(initColorPicker, 3000);
 
     // 使用 MutationObserver 监听 CMS iframe 内容加载
     if (window.CMS) {
       CMS.on('init', () => {
         setTimeout(initCharCount, 2000);
+        setTimeout(initColorPicker, 2000);
       });
     }
   </script>
