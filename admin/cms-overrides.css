@@ -231,12 +231,11 @@ body {
   min-width: 0 !important;
 }
 
-/* --- Summary/Text Area: below image, ensure all text inside --- */
+/* --- Summary/Text Area: below image --- */
 [class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
 [class*="GridCardLink"] [class*="CardBody"],
-[class*="GridCardLink"] > div:last-child,
-[class*="GridCardLink"] > a {
+[class*="GridCardLink"] > div:last-child {
   padding: 10px 12px !important;
   background: #fff !important;
   display: flex !important;
@@ -249,7 +248,7 @@ body {
   box-sizing: border-box !important;
 }
 
-/* --- ALL text in card: dark color, truncate to stay inside --- */
+/* --- ALL text in card with image: DARK color, truncate --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -272,27 +271,23 @@ body {
   min-width: 0 !important;
 }
 
-/* --- Excerpt: two lines max --- */
-[class*="GridCardLink"] [class*="Excerpt"],
-[class*="GridCardLink"] .excerpt {
-  font-size: 0.75rem !important;
-  color: #6B6B6B !important;
-  line-height: 1.4 !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-  white-space: normal !important;
-}
-
-/* --- No image fallback: solid accent color, white text on top --- */
+/* --- No image fallback: solid accent color, white text --- */
+[class*="ListCardLink"]:not(:has(img)),
 [class*="GridCardLink"]:not(:has(img)) {
   background: #A8C5AE !important;
 }
+[class*="ListCardLink"]:not(:has(img)) [class*="Summary"],
+[class*="ListCardLink"]:not(:has(img)) > div:last-child,
 [class*="GridCardLink"]:not(:has(img)) [class*="Summary"],
 [class*="GridCardLink"]:not(:has(img)) > div:last-child {
   background: transparent !important;
 }
+[class*="ListCardLink"]:not(:has(img)) h1,
+[class*="ListCardLink"]:not(:has(img)) h2,
+[class*="ListCardLink"]:not(:has(img)) h3,
+[class*="ListCardLink"]:not(:has(img)) p,
+[class*="ListCardLink"]:not(:has(img)) span,
+[class*="ListCardLink"]:not(:has(img)) a,
 [class*="GridCardLink"]:not(:has(img)) h1,
 [class*="GridCardLink"]:not(:has(img)) h2,
 [class*="GridCardLink"]:not(:has(img)) h3,
