@@ -471,6 +471,14 @@ a:hover { color: var(--rose); }
   font-size: 0.65rem;
   opacity: 0.85;
   letter-spacing: 0.02em;
+  display: block;
+  line-height: 1.4;
+}
+
+.post-card-body:has(.post-time-brief:first-child) .post-card-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .post-card-title {
