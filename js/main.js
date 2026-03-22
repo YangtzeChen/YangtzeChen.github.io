@@ -141,6 +141,21 @@
   }
 
   // ---- Blog: Create a Post Card ----
+  // Random gradient colors for posts without cover image
+  const FALLBACK_GRADIENTS = [
+    'linear-gradient(135deg, #a8c5ae 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #d4a5a5 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6ba3be 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6b9e6b 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #c1a87d 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #9e8fc4 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #c49e6b 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6bc4be 0%, #f2f0eb 100%)'
+  ];
+  function getRandomGradient() {
+    return FALLBACK_GRADIENTS[Math.floor(Math.random() * FALLBACK_GRADIENTS.length)];
+  }
+
   function createPostCard(post, slug) {
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
@@ -155,12 +170,14 @@
         </div>
       </div>
     `;
-    // Handle missing image (404 or broken)
+    // Handle missing image (404 or broken) and set random gradient
     if (post.image) {
       const img = card.querySelector('.post-card-thumb');
       if (img) {
         img.onerror = () => {
           img.remove();
+          const wrap = card.querySelector('.post-card-img-wrap');
+          if (wrap) wrap.style.background = getRandomGradient();
         };
       }
     }
@@ -302,7 +319,7 @@
 
       if (posts.length === 0) {
         grid.innerHTML = `
-          <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state" style="width: 100%; min-height: 280px;">
             <div class="empty-state-icon">📷</div>
             <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
           </div>
@@ -334,7 +351,7 @@
       });
     } catch {
       grid.innerHTML = `
-        <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-state" style="width: 100%; min-height: 280px;">
           <div class="empty-state-icon">📷</div>
           <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
         </div>

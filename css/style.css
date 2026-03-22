@@ -446,11 +446,11 @@ a:hover { color: var(--rose); }
   pointer-events: none;
 }
 
-/* No image: body becomes normal flow, no fade effect */
+/* No image: body becomes normal flow, transparent background */
 .post-card-img-wrap:not(:has(.post-card-thumb)) .post-card-body {
   position: relative;
   padding: 1.5rem 1.25rem 1.5rem;
-  background: var(--bg-alt);
+  background: transparent;
   color: var(--text);
   pointer-events: auto;
 }
