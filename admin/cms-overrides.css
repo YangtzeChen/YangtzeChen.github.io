@@ -62,14 +62,16 @@ input[id*="cardColor-field"] {
   display: none !important;
 }
 
-/* ColorSwatch - position to the right instead of hiding */
+/* ColorSwatch - position to the right first, then hide */
 [class*="ColorSwatch"] {
   position: absolute !important;
   right: 10px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  display: block !important;
-  z-index: 10 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Ensure the color picker container has relative positioning */
