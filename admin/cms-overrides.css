@@ -197,7 +197,7 @@ body {
   gap: 20px !important;
 }
 
-/* --- Grid Card Link: vertical layout --- */
+/* --- Grid Card Link: vertical layout, all content inside --- */
 [class*="GridCardLink"],
 [class*="ListCardLink"] {
   position: relative !important;
@@ -210,6 +210,8 @@ body {
   text-decoration: none !important;
   display: flex !important;
   flex-direction: column !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 [class*="GridCardLink"]:hover,
@@ -226,13 +228,15 @@ body {
   object-fit: cover !important;
   display: block !important;
   flex-shrink: 0 !important;
+  min-width: 0 !important;
 }
 
-/* --- Summary/Text Area: below image --- */
+/* --- Summary/Text Area: below image, ensure all text inside --- */
 [class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
 [class*="GridCardLink"] [class*="CardBody"],
-[class*="GridCardLink"] > div:last-child {
+[class*="GridCardLink"] > div:last-child,
+[class*="GridCardLink"] > a {
   padding: 10px 12px !important;
   background: #fff !important;
   display: flex !important;
@@ -240,9 +244,12 @@ body {
   gap: 4px !important;
   flex: 0 0 auto !important;
   overflow: hidden !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* --- All text: dark color, normal weight --- */
+/* --- ALL text in card: dark color, truncate to stay inside --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -260,6 +267,9 @@ body {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+  display: block !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
 }
 
 /* --- Excerpt: two lines max --- */
