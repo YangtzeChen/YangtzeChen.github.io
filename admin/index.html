@@ -187,9 +187,13 @@
       console.log('✓ Cover mutex initialized');
     }
 
-    // B16: Hide image preview using MutationObserver (CSS can't penetrate iframe)
+    // B16: Hide image preview - but NOT in modal dialogs
     function hideImagePreviews() {
-      // 查找所有图片预览元素并隐藏
+      // 只在编辑页容器内隐藏预览，不影响弹窗
+      const editorContainer = document.querySelector('[class*="EditorContainer"]');
+      if (!editorContainer) return;
+
+      // 隐藏编辑页内的图片预览
       const selectors = [
         'img[src*="/content/gallery/"]',
         'img[src*="/content/blog/"]',
@@ -199,7 +203,7 @@
       ];
 
       selectors.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
+        editorContainer.querySelectorAll(sel).forEach(el => {
           el.style.display = 'none';
         });
       });
