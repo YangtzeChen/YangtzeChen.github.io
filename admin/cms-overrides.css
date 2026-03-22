@@ -197,13 +197,13 @@ body {
   gap: 20px !important;
 }
 
-/* --- Grid Card Link: vertical layout, no image overlap --- */
+/* --- Grid Card Link: vertical layout --- */
 [class*="GridCardLink"],
 [class*="ListCardLink"] {
   position: relative !important;
   border: none !important;
   border-radius: 10px !important;
-  overflow: visible !important;
+  overflow: hidden !important;
   background: #fff !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease) !important;
@@ -222,35 +222,28 @@ body {
 [class*="GridCardLink"] > a > img,
 [class*="GridCardLink"] img {
   width: 100% !important;
-  height: 160px !important;
+  height: 140px !important;
   object-fit: cover !important;
   display: block !important;
-  border-radius: 10px 10px 0 0 !important;
+  flex-shrink: 0 !important;
 }
 
-/* --- Summary/Text Area: below image --- */
+/* --- Summary/Text Area: below image, white background --- */
 [class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
-[class*="GridCardLink"] [class*="CardBody"] {
-  padding: 12px 14px !important;
+[class*="GridCardLink"] [class*="CardBody"],
+[class*="GridCardLink"] > div:last-child {
+  padding: 10px 12px !important;
   background: #fff !important;
-  border-radius: 0 0 10px 10px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: 4px !important;
+  flex: 0 0 auto !important;
+  overflow: hidden !important;
+  word-break: break-all !important;
 }
 
-/* --- LT (Last Time/Updated): dark accent background --- */
-[class*="GridCardLink"] [class*="Summary"]:has(+ img),
-[class*="GridCardLink"] span:contains("LT"),
-[class*="GridCardLink"] p:contains("LT") {
-  background: rgba(124, 154, 130, 0.15) !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  border-left: 3px solid #7C9A82 !important;
-}
-
-/* --- All text in text area: dark color, normal weight --- */
+/* --- All text in text area: dark color, normal weight, truncate --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -263,21 +256,25 @@ body {
   font-weight: 400 !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-
-/* --- All text: small, muted --- */
-[class*="GridCardLink"] [class*="Summary"],
-[class*="GridCardLink"] [class*="Summary"] p,
-[class*="GridCardLink"] [class*="Summary"] span {
   font-size: 0.75rem !important;
-  color: #6B6B6B !important;
-  line-height: 1.5 !important;
+  line-height: 1.4 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
-/* --- Excerpt: two lines max --- */
+/* --- Excerpt: two lines max, no truncate --- */
 [class*="GridCardLink"] [class*="Excerpt"],
 [class*="GridCardLink"] .excerpt {
-  font-size: 0.8rem !important;
+  font-size: 0.75rem !important;
+  color: #6B6B6B !important;
+  line-height: 1.4 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+}
   color: #6B6B6B !important;
   line-height: 1.5 !important;
   display: -webkit-box !important;
