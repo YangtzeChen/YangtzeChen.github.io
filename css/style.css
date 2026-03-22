@@ -479,6 +479,7 @@ a:hover { color: var(--rose); }
   display: flex;
   flex-direction: column;
   gap: 2px;
+  text-align: left;
 }
 
 .post-card-title {
