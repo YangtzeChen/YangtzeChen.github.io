@@ -258,11 +258,11 @@
       postHeader.innerHTML = `
         <h1>${meta.title || slug}</h1>
         <div class="post-time-detail">
-          <span class="post-time-label">CT</span>
+          <span class="post-time-label">创建时间</span>
           <span class="post-time-value">${formatDate(meta.date)}</span>
           ${meta.updated ? `
             <span class="post-time-sep">·</span>
-            <span class="post-time-label">LT</span>
+            <span class="post-time-label">最后修改</span>
             <span class="post-time-value">${formatDate(meta.updated)}</span>
           ` : ''}
         </div>
