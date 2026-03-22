@@ -114,16 +114,169 @@
     }
 
     /* ============================================================
-       Checkerboard Transparency Fix
+       B2: Admin Dashboard Shell
        ============================================================ */
-    /* Target the image wrapper inside Decap */
+    [class*="AppMainContainer"] {
+      max-width: none !important;
+      margin: 0 !important;
+    }
+    
+    [class*="SidebarContainer"] {
+      height: 100vh !important;
+      background: #f4f4f4 !important;
+      border-right: 1px solid #eaeaea !important;
+    }
+
+    body {
+      background-color: #fafafa !important;
+    }
+
+    /* ============================================================
+       B4: Admin Editor Framework
+       ============================================================ */
+    /* Remove the 900px centering to allow two-column mode */
+    [class*="EditorContainer"] {
+      max-width: 1400px !important;
+      width: 95% !important;
+      margin: 40px auto !important;
+    }
+    
+    /* Hide the Date widget dynamically based on its structure */
+    [class*="ControlContainer"]:has(label[for*="date"]) {
+      display: none !important;
+    }
+
+    /* Beautify cover image upload (replace checkerboard) */
     [class*="ImageWrapper"], [class*="ImageControl"] img {
-      background-color: #e5e5e5 !important;
-      background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee) !important;
-      background-position: 0 0, 10px 10px !important;
-      background-size: 20px 20px !important;
+      background-color: #f4f4f4 !important;
+      background-image: none !important; /* overrides previous checkerboard */
       border-radius: 6px !important;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05) !important;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.06) !important;
+    }
+
+    /* ============================================================
+       B5: Admin Editor Media Widget (Markdown Inline Images)
+       ============================================================ */
+    /* Hide the thick gray borders around inline components */
+    [class*="BlockWrapper"] {
+      border: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    
+    /* Hide the "IMAGE" label bar, show on hover */
+    [class*="BlockLabel"] {
+      opacity: 0 !important;
+      transition: opacity 0.2s ease !important;
+    }
+    [class*="BlockWrapper"]:hover [class*="BlockLabel"] {
+      opacity: 1 !important;
+    }
+
+    /* ============================================================
+       B6: Admin Code Block Component Fix
+       ============================================================ */
+    /* Fix overflow hidden clipping dropdowns */
+    [class*="ControlContainer"]:has([class*="CodeEditor"]),
+    [class*="SettingsPanel"] {
+      overflow: visible !important;
+    }
+
+    /* ============================================================
+       500PX MEDIA LIBRARY — Collection Grid View Overhaul
+       ============================================================ */
+
+    /* --- Grid Container: tighter, more gallery-like --- */
+    [class*="CollectionEntries"],
+    [class*="EntriesCollection"] {
+      gap: 20px !important;
+    }
+
+    /* --- Grid Card Link (each card in collection grid view) --- */
+    [class*="GridCardLink"],
+    [class*="ListCardLink"] {
+      border: none !important;
+      border-radius: 10px !important;
+      overflow: hidden !important;
+      background: #fff !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+      text-decoration: none !important;
+    }
+
+    [class*="GridCardLink"]:hover,
+    [class*="ListCardLink"]:hover {
+      transform: translateY(-5px) scale(1.01) !important;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.12) !important;
+    }
+
+    /* --- Card Image: forced 3:2 ratio, cover fill --- */
+    [class*="GridCardLink"] [class*="CardImage"],
+    [class*="GridCardLink"] > div:first-child,
+    [class*="CardImageWrapper"] {
+      aspect-ratio: 3 / 2 !important;
+      width: 100% !important;
+      overflow: hidden !important;
+      position: relative !important;
+      background: #f2f0eb !important;
+    }
+
+    [class*="GridCardLink"] img,
+    [class*="CardImage"] img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block !important;
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    }
+
+    [class*="GridCardLink"]:hover img,
+    [class*="CardImage"]:hover img {
+      transform: scale(1.05) !important;
+    }
+
+    /* --- Card Text Content --- */
+    [class*="GridCardLink"] [class*="CardBody"],
+    [class*="GridCardLink"] [class*="CardContent"],
+    [class*="GridCardLink"] > div:last-child {
+      padding: 12px 14px !important;
+      background: #fff !important;
+    }
+
+    [class*="GridCardLink"] h2,
+    [class*="GridCardLink"] [class*="CardTitle"] {
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      color: #2c2c2c !important;
+      line-height: 1.35 !important;
+      margin: 0 0 4px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    [class*="GridCardLink"] [class*="CardDate"],
+    [class*="GridCardLink"] [class*="CardDescription"],
+    [class*="GridCardLink"] small,
+    [class*="GridCardLink"] span {
+      font-size: 0.75rem !important;
+      color: #888 !important;
+      letter-spacing: 0.02em !important;
+    }
+
+    /* --- Remove any leftover default borders on list items --- */
+    [class*="EntryListing"] li,
+    [class*="CollectionEntries"] li {
+      border: none !important;
+      list-style: none !important;
+    }
+
+    /* --- Ensure the "New" create button stays clean --- */
+    [class*="CollectionTop"] a[class*="NewEntry"] {
+      border-radius: 8px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+      border: none !important;
     }
 
   </style>

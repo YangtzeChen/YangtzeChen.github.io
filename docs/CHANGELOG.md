@@ -1,5 +1,45 @@
 # 版本修改说明
 
+## V2.6.0 — 2026-03-22
+
+### ✨ 后台全局视觉与交互重构 (Admin UI Overhaul)
+
+- **B2 (App Shell)**：打破定宽孤岛布局，实现 100% 宽全屏侧边栏 + 画廊流式布局。取消顶栏固定阴影，提升沉浸感。
+- **B3 (Metadata)**：在后台编辑器文章与相册集合中增加 `updated` 字段；网格卡片摘要自动展示“更新时间”，使得版本追踪更加直观。
+- **B4 (Editor Layout)**：解禁编辑器 `900px` 宽度限制，释放至宽屏展现“左排版、右预览”的双栏沉浸视野。
+- **B4 (Editor Components)**：自动化彻底隐藏影响创作视线的“日期选择”控件；移除封面图丑陋的棋盘格，改用纯净通透的微内阴影浅灰画布展示相册。
+- **B5 (MD Image inline)**：打破 Markdown 默认图片组件的灰色边框与占位感，实现自然无框缩略图流。仅在 Hover 时平滑浮现原有的 `IMAGE` 属性设置面板。
+- **B6 (Code Block Fix)**：修复代码块（Code Widget）插件的 CSS 溢出隐藏 Bug，确保其下拉功能列表能完整展开而不受布局截断。
+
+### 📁 涉及文件
+
+| 文件 | 改动说明 |
+|------|----------|
+| `admin/config.yml` | 集合 `fields` 增加 `updated` 字段；更新 `summary` 模板结构 |
+| `admin/index.html` | 为 CMS 注入 ~60 行新的 CSS Hacks，重构 Shell、Editor 与 Widget 组件样式 |
+
+---
+
+## V2.5.0 — 2026-03-22
+
+### ✨ 后台文章列表卡片重构 (Admin Collection Grid UI)
+
+- **网格视图启用**：为博客文章集合 (blog) 在 `config.yml` 中开启 `view_style: "grid"`，后台文章列表从简陋的行列表升级为网格卡片视图。
+- **3:2 封面预览**：通过 `aspect-ratio: 3/2` + `object-fit: cover` 强制 CMS 网格卡片中的封面图保持一致的摄影比例，不变形不截断。
+- **去边框 + 弥散阴影**：移除卡片的所有实线边框，改为 `0 4px 16px rgba(0,0,0,0.06)` 极淡悬浮阴影，hover 时增强至 `0 14px 40px rgba(0,0,0,0.12)` 配合 `-5px` 位移和 `scale(1.01)` 缩放。
+- **封面图片缩放**：hover 时卡片内的缩略图平滑放大 `scale(1.05)`。
+- **精炼排版**：标题 0.9rem、加粗、单行截断；日期缩小为 0.75rem 灰色辅助文字。
+- **选择器作用域**：所有 CSS 覆写严格使用 `[class*='GridCardLink']`、`[class*='CardImage']` 等属性选择器，仅作用于 CMS 网格视图组件。
+
+### 📁 涉及文件
+
+| 文件 | 改动说明 |
+|------|----------|
+| `admin/config.yml` | blog 集合新增 `view_style: "grid"` + `summary` |
+| `admin/index.html` | 新增 ~100 行 CMS Grid Card 样式覆写 |
+
+---
+
 ## V2.4.0 — 2026-03-22
 
 ### ✨ 文章卡片画廊级重构 (500px Media-Asset Style)
