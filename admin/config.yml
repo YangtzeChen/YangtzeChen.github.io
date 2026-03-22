@@ -4,6 +4,7 @@ backend:
   branch: main
   base_url: https://sveltia-cms-auth.yangtzechenw.workers.dev
   publish_mode: simple
+  always_uptodate: true
   # ↑ 部署 OAuth 代理后，替换为你的 Cloudflare Workers URL
 
 media_folder: "content/gallery/images"

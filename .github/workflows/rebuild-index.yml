@@ -19,52 +19,68 @@ jobs:
 
       - name: Rebuild blog index.json
         run: |
+          mkdir -p content/blog
           cd content/blog
           python3 -c "
           import os, json, re
-          files = [f for f in os.listdir('.') if f.endswith('.md')]
-          out = []
-          for f in files:
-              with open(f, 'r', encoding='utf-8') as file:
-                  content = file.read()
-              match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-              if match:
-                  meta = {}
-                  for line in match.group(1).split('\n'):
-                      if ':' in line:
-                          k, v = line.split(':', 1)
-                          k = k.strip()
-                          v = v.strip().strip('\"').strip('\'')
-                          meta[k] = v
-                  meta['slug'] = f[:-3]
-                  out.append(meta)
-          with open('index.json', 'w', encoding='utf-8') as w:
-              json.dump(out, w, indent=2, ensure_ascii=False)
+          try:
+              files = [f for f in os.listdir('.') if f.endswith('.md')]
+              out = []
+              for f in files:
+                  try:
+                      with open(f, 'r', encoding='utf-8') as file:
+                          content = file.read()
+                      match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+                      if match:
+                          meta = {}
+                          for line in match.group(1).split('\n'):
+                              if ':' in line:
+                                  k, v = line.split(':', 1)
+                                  k = k.strip()
+                                  v = v.strip().strip('\"').strip('\'')
+                                  meta[k] = v
+                          meta['slug'] = f[:-3]
+                          out.append(meta)
+                  except Exception as e:
+                      print(f'Skipping file {f} due to error: {e}')
+              out.sort(key=lambda x: x.get('date', ''), reverse=True)
+              with open('index.json', 'w', encoding='utf-8') as w:
+                  json.dump(out, w, indent=2, ensure_ascii=False)
+          except Exception as e:
+              print(f'Fatal error rebuilding blog index: {e}')
+              with open('index.json', 'w', encoding='utf-8') as w:
+                  w.write('[]')
           "
 
       - name: Rebuild gallery index.json
         run: |
+          mkdir -p content/gallery/items
           cd content/gallery
-          mkdir -p items
           python3 -c "
           import os, json
-          out = []
-          for root, dirs, files in os.walk('items'):
-              for f in files:
-                  if f == 'index.json':
-                      try:
-                          with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
-                              data = json.load(file)
-                          if data:
-                              if 'images' in data:
-                                  for img in data['images']:
-                                      if img.get('image') and not img['image'].startswith('/'):
-                                          img['image'] = '/content/gallery/' + root.replace(r'\\', '/') + '/' + img['image']
-                              out.append(data)
-                      except Exception: pass
-          out.sort(key=lambda x: x.get('date', ''), reverse=True)
-          with open('index.json', 'w', encoding='utf-8') as w:
-              json.dump(out, w, indent=2, ensure_ascii=False)
+          try:
+              out = []
+              for root, dirs, files in os.walk('items'):
+                  for f in files:
+                      if f == 'index.json':
+                          try:
+                              with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
+                                  data = json.load(file)
+                              if data:
+                                  if 'images' in data:
+                                      for img in data['images']:
+                                          if img.get('image') and not img['image'].startswith('/'):
+                                              img['image'] = '/content/gallery/' + root.replace(r'\\', '/') + '/' + img['image']
+                                  out.append(data)
+                          except Exception as e:
+                              print(f'Skipping file {f} due to error: {e}')
+              out.sort(key=lambda x: x.get('date', ''), reverse=True)
+              with open('index.json', 'w', encoding='utf-8') as w:
+                  json.dump(out, w, indent=2, ensure_ascii=False)
+          except Exception as e:
+              print(f'Fatal error rebuilding gallery index: {e}')
+              with open('index.json', 'w', encoding='utf-8') as w:
+                  w.write('[]')
           "
 
       - name: Commit updated indexes
@@ -72,5 +88,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add content/blog/index.json content/gallery/index.json
-          git diff --cached --quiet || git commit -m "chore: rebuild content indexes"
+          git diff --cached --quiet || git commit -m "chore: rebuild content indexes [skip ci]"
+          git config pull.rebase true
+          git pull origin main || echo "git pull failed, continuing"
           git push

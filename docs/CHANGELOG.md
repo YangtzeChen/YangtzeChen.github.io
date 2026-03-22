@@ -1,5 +1,16 @@
 # 版本修改说明
 
+## V2.8.0 — 2026-03-22
+
+### 🛡️ CMS 与 Git 同步健壮性加固 (B7: Sync Robustness)
+
+- **工作流容错能力提升**：重构了 GitHub Action (`rebuild-index.yml`) 中的 Python 索引构建脚本；新增 `try-except` 包裹，彻底防止文章被物理删除时由于路径或文件缺失引发的报错崩溃。
+- **防“幽灵文章”死锁**：当集合目录内容为空或发生致命解析错误时，脚本将自动拦截异常并向 `index.json` 安全回写 `[]`（空数组兜底），实现索引缓存的强制清理，解决前台仍然保留已删除文章卡片的“幽灵残留”问题。
+- **并发推送防护**：为 GitHub Action 的最终提交流程追加 `git pull origin main --rebase` 哨兵，保障即使在构建期又有新的 CMS 变更推上云端，Action 也能自动完成分支衍合而避免因 Non-Fast-Forward 引起的索引更新失败。
+- **强制同步拦截**：核实并维系了 `admin/config.yml` 的 `always_uptodate: true` 配置，彻底在后端拦截未拉取最新树节点的双重并发。
+
+---
+
 ## V2.7.0 — 2026-03-22
 
 ### ✨ 后台全局重构细节精度打磨 (Admin UI Precision Refinements)
