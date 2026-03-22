@@ -467,6 +467,12 @@ a:hover { color: var(--rose); }
   color: var(--text-muted);
 }
 
+.post-time-brief {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
 .post-card-title {
   font-family: var(--font-heading);
   font-size: 1.05rem;
@@ -514,6 +520,33 @@ a:hover { color: var(--rose); }
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.3;
+}
+
+.post-time-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-alt);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.post-time-label {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.post-time-value {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.post-time-sep {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 .post-meta-column {

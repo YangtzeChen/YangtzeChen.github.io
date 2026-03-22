@@ -165,11 +165,14 @@
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
     const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
+    const timeHTML = post.updated && post.updated !== post.date
+      ? `<span class="post-time-brief">CT ${formatDate(post.date)} · LT ${formatDate(post.updated)}</span>`
+      : `<span class="post-time-brief">CT ${formatDate(post.date)}</span>`;
     card.innerHTML = `
       <div class="post-card-img-wrap" style="${!post.image ? 'background: ' + getGradientBySlug(slug) : ''}">
         ${imgHTML}
         <div class="post-card-body">
-          <p class="post-card-date">${formatDate(post.date)}</p>
+          <p class="post-card-date">${timeHTML}</p>
           <h3 class="post-card-title">${post.title || '无标题'}</h3>
           <p class="post-card-excerpt">${post.excerpt || ''}</p>
         </div>
@@ -254,9 +257,14 @@
 
       postHeader.innerHTML = `
         <h1>${meta.title || slug}</h1>
-        <div class="post-meta-column" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; margin-bottom: 20px;">
-          <p class="post-card-date" style="font-weight: 300;">发布于：${formatDate(meta.date)}</p>
-          ${meta.updated ? `<p class="post-card-date" style="font-weight: 300; opacity: 0.8;">更新于：${formatDate(meta.updated)}</p>` : ''}
+        <div class="post-time-detail">
+          <span class="post-time-label">CT</span>
+          <span class="post-time-value">${formatDate(meta.date)}</span>
+          ${meta.updated ? `
+            <span class="post-time-sep">·</span>
+            <span class="post-time-label">LT</span>
+            <span class="post-time-value">${formatDate(meta.updated)}</span>
+          ` : ''}
         </div>
       `;
       postBody.innerHTML = marked.parse(body);
