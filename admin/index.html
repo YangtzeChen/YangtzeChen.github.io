@@ -205,12 +205,54 @@
       });
     }
 
+    // B17: Only show remove button for uploaded images, hide other buttons
+    function initImageButtonCustomizer() {
+      // 查找所有图片上传控件中的按钮
+      const buttons = document.querySelectorAll('[class*="ControlContainer"] button');
+
+      buttons.forEach(btn => {
+        const text = btn.textContent.toLowerCase().trim();
+        const isRemoveBtn = text.includes('移除') || text.includes('remove') || text.includes('delete');
+        const isInsertBtn = text.includes('插入') || text.includes('insert') || text.includes('选择');
+        const isPreviewBtn = text.includes('预览') || text.includes('preview');
+
+        // 检查当前图片容器是否有图片
+        const container = btn.closest('[class*="ControlContainer"]');
+        const hasImage = container && container.querySelector('img[src*="/content/"]');
+
+        if (isRemoveBtn) {
+          // 有图片时显示移除按钮，无图片时隐藏
+          btn.style.display = hasImage ? '' : 'none';
+          // 保留移除按钮红色样式
+          btn.style.background = '#d4a5a5';
+          btn.style.color = '#fff';
+          btn.style.border = 'none';
+          btn.style.borderRadius = '4px';
+          btn.style.padding = '4px 12px';
+        }
+
+        // 有图片时隐藏插入按钮，无图片时显示
+        if (isInsertBtn) {
+          btn.style.display = hasImage ? 'none' : '';
+        }
+
+        // 始终隐藏预览按钮
+        if (isPreviewBtn) {
+          btn.style.display = 'none';
+        }
+      });
+    }
+
     function initImagePreviewHider() {
       // 立即尝试隐藏
       hideImagePreviews();
+      initImageButtonCustomizer();
 
       // 设置定时器持续隐藏（CMS可能在用户操作后动态添加元素）
-      setInterval(hideImagePreviews, 1000);
+      setInterval(() => {
+        hideImagePreviews();
+        initImageButtonCustomizer();
+      }, 1000);
     }
 
     // 立即尝试，然后重复尝试
