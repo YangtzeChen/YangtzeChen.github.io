@@ -5,7 +5,19 @@
     "caption": "在春节期间拍摄的湖面",
     "images": [
       {
-        "image": "/content/gallery/images/湖边夕阳.jpg"
+        "image": "/content/gallery/images/湖边夕阳.jpg",
+        "sub_title": "1",
+        "sub_caption": "1"
+      },
+      {
+        "image": "/content/gallery/images/unkownflower.jpg",
+        "sub_title": "1",
+        "sub_caption": "1"
+      },
+      {
+        "sub_title": "1",
+        "sub_caption": "1",
+        "image": "/content/gallery/images/moonbridge.jpg"
       }
     ],
     "image": "/content/gallery/images/湖边夕阳.jpg"
