@@ -47,14 +47,12 @@ body {
 }
 
 /* Color picker input - set width to 200px and show color as background */
-input[id*="cardColor-field"] {
-  width: 200px !important;
-  background: linear-gradient(to right, var(--color-value, #cccccc) 0%, var(--color-value, #cccccc) 20px, transparent 20px) !important;
-}
-
-/* Also target by class if id pattern doesn't match */
+input[id*="cardColor-field"],
 .css-83wr9v {
   width: 200px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  background: linear-gradient(to right, var(--color-value, #cccccc) 0%, var(--color-value, #cccccc) 20px, transparent 20px) !important;
 }
 
 /* Hide the help icon next to color picker */
@@ -72,14 +70,6 @@ input[id*="cardColor-field"] {
   width: 0 !important;
   height: 0 !important;
   overflow: hidden !important;
-}
-
-/* Ensure the color picker container has relative positioning */
-input[id*="cardColor-field"],
-.css-83wr9v {
-  position: relative !important;
-  padding-left: 20px !important;
-  padding-right: 20px !important;
 }
 
 /* Editor Main Container */
