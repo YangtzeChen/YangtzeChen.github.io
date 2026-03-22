@@ -394,7 +394,12 @@
       latestImages = latestImages.slice(0, 8);
 
       if (latestImages.length === 0) {
-        container.innerHTML = '<p class="text-center text-muted">暂无相片</p>';
+        container.innerHTML = `
+          <div class="empty-state" style="width: 100%; min-height: 280px;">
+            <div class="empty-state-icon">📷</div>
+            <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+          </div>
+        `;
         return;
       }
 
@@ -413,7 +418,12 @@
         requestAnimationFrame(() => item.classList.add('visible'));
       });
     } catch {
-      container.innerHTML = '<p class="text-center text-muted">暂无相片</p>';
+      container.innerHTML = `
+        <div class="empty-state" style="width: 100%; min-height: 280px;">
+          <div class="empty-state-icon">📷</div>
+          <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+        </div>
+      `;
     }
   }
 
