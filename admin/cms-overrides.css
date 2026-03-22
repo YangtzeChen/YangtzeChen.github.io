@@ -23,12 +23,12 @@ body {
   background-color: #fff !important;
 }
 
-/* Decoy spacer above title input - nav bar covers this useless element instead of title */
+/* Decoy spacer above title input - pushes input down so nav covers this instead */
 [class*="ControlContainer"]:first-of-type::before {
   content: '' !important;
   display: block !important;
-  height: 200px !important;
-  margin-bottom: -200px !important;
+  height: 0 !important;
+  margin-top: 200px !important;
   background: transparent !important;
   pointer-events: none !important;
 }
