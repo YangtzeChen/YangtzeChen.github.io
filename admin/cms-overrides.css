@@ -43,7 +43,7 @@ body {
   padding: 0 !important;
   display: flex !important;
   flex-direction: row !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   gap: 15px !important;
 }
 
@@ -53,7 +53,7 @@ body {
   background: transparent !important;
 }
 
-/* Label Typogrpahy - left side */
+/* Label Typogrpahy - left side, align to top */
 [class*="FieldLabel"] {
   font-size: 13px !important;
   text-transform: uppercase !important;
@@ -62,6 +62,7 @@ body {
   margin-bottom: 0 !important;
   min-width: 100px !important;
   text-align: left !important;
+  padding-top: 0 !important;
 }
 
 /* Inputs */
