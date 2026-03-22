@@ -222,9 +222,9 @@
 
       postHeader.innerHTML = `
         <h1>${meta.title || slug}</h1>
-        <div class="post-meta-row">
-          <p class="post-card-date">发布于 ${formatDate(meta.date)}</p>
-          ${meta.updated ? `<p class="post-card-date" style="margin-left: 15px; opacity: 0.8;">| 更新于 ${formatDate(meta.updated)}</p>` : ''}
+        <div class="post-meta-column" style="display: flex; flex-direction: column; gap: 4px; margin-top: 10px; margin-bottom: 20px;">
+          <p class="post-card-date" style="font-weight: 300;">发布于：${formatDate(meta.date)}</p>
+          ${meta.updated ? `<p class="post-card-date" style="font-weight: 300; opacity: 0.8;">更新于：${formatDate(meta.updated)}</p>` : ''}
         </div>
       `;
       postBody.innerHTML = marked.parse(body);

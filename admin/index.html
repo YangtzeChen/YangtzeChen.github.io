@@ -212,30 +212,7 @@
       box-shadow: 0 14px 40px rgba(0,0,0,0.12) !important;
     }
 
-    /* --- Card Image: forced 3:2 ratio, cover fill --- */
-    [class*="GridCardLink"] [class*="CardImage"],
-    [class*="GridCardLink"] > div:first-child:not(:last-child),
-    [class*="CardImageWrapper"] {
-      aspect-ratio: 3 / 2 !important;
-      width: 100% !important;
-      overflow: hidden !important;
-      position: relative !important;
-      background-color: #f2f0eb !important;
-    }
 
-    [class*="GridCardLink"] img,
-    [class*="CardImage"] img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-      display: block !important;
-      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    }
-
-    [class*="GridCardLink"]:hover img,
-    [class*="CardImage"]:hover img {
-      transform: scale(1.05) !important;
-    }
 
     /* --- Card Text Content --- */
     [class*="GridCardLink"] [class*="CardBody"],
