@@ -121,6 +121,7 @@ input[type="text"]:focus, textarea:focus {
 [class*="AppMainContainer"] {
   max-width: none !important;
   margin: 0 !important;
+  padding-top: 60px !important; /* Add space for fixed header */
 }
 
 [class*="SidebarContainer"] {
@@ -140,7 +141,8 @@ body {
 [class*="EditorContainer"] {
   max-width: 1400px !important;
   width: 95% !important;
-  margin: 40px auto !important;
+  margin: 20px auto !important;
+  padding-top: 20px !important; /* Extra top padding for editor visibility */
 }
 
 /* Hide the Date widget dynamically UNLESS it encounters a validation error */
