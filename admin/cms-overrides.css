@@ -93,6 +93,13 @@ body {
   align-items: center !important;
 }
 
+/* Draft, excerpt, cover image labels also centered vertically */
+[class*="ControlContainer"]:nth-child(4),
+[class*="ControlContainer"]:nth-child(5),
+[class*="ControlContainer"]:nth-child(6) {
+  align-items: center !important;
+}
+
 /* Label text turns white when input is focused */
 [class*="ControlContainer"]:focus-within label {
   color: #fff !important;
