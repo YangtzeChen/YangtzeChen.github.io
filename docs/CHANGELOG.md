@@ -1,5 +1,15 @@
 # 版本修改说明
 
+## V2.9.0 — 2026-03-22
+
+### 🪲 CMS 隐性验证失败修复 (B8: Hidden Validation Fix)
+
+- **后台探针注入**：在 CMS 容器外部署了一段全局原生 JavaScript 监控器。当用户尝试发布却因“隐形必填项”被拦截时，控制台能直接穿透 React Virtual DOM 向 User 详细打印具体未填写的字段（如由于 CSS 折叠误伤的 Widget 漏传）。
+- **屏蔽盾自动降级**：为 B4 隐藏 Date 字段的 CSS 逻辑打上了补丁 (`:not(:has([class*="Error"]))`)。这意味着该控件平常依然保持优雅的不可见状态；但一旦触发底层 Required 报警，容器会解除隐藏立刻暴露出红字供用户查改。
+- **日期限制解除**：在 `config.yml` 中主动将文章和画廊的 `date` 与 `updated` 设置为 `required: false`，彻底卸下了后台隐形的强填枷锁。
+
+---
+
 ## V2.8.0 — 2026-03-22
 
 ### 🛡️ CMS 与 Git 同步健壮性加固 (B7: Sync Robustness)

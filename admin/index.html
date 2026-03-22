@@ -141,8 +141,8 @@
       margin: 40px auto !important;
     }
     
-    /* Hide the Date widget dynamically based on its structure */
-    [class*="ControlContainer"]:has(label[for*="date"]) {
+    /* Hide the Date widget dynamically UNLESS it encounters a validation error */
+    [class*="ControlContainer"]:has(label[for*="date"]):not(:has([class*="Error"])) {
       display: none !important;
     }
 
@@ -284,5 +284,32 @@
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0/dist/decap-cms.js"></script>
+
+  <!-- B8: Global Validation Error Locator -->
+  <script>
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (btn && /(save|publish|保存|发布)/i.test(btn.innerText)) {
+        setTimeout(() => {
+          const errorNodes = document.querySelectorAll('[class*="ControlErrors"], [class*="Error"]');
+          let foundErrors = false;
+          
+          errorNodes.forEach(node => {
+            const container = node.closest('[class*="ControlPane"]') || node.parentElement;
+            if (!container) return;
+            const label = container.querySelector('label');
+            if (label && node.textContent.trim()) {
+              console.warn(`🚨 [CMS Validation] Field [${label.textContent.trim()}] Error: ${node.textContent.trim()}`);
+              foundErrors = true;
+            }
+          });
+
+          if (foundErrors) {
+            console.error("⚠️ 保存或发布失败：您有必填项未填。请查阅上方的 [CMS Validation] 警告获取具体被隐藏/漏填的字段名！");
+          }
+        }, 300);
+      }
+    });
+  </script>
 </body>
 </html>
