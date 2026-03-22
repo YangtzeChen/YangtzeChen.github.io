@@ -71,7 +71,7 @@
     function addCharCount(input, max) {
       if (!input) return;
       const counter = document.createElement('span');
-      counter.style.cssText = 'font-size:12px;color:#888;margin-left:8px;';
+      counter.style.cssText = 'font-size:12px;color:#888;margin-left:8px;position:absolute;right:10px;top:50%;transform:translateY(-50%);';
       input.parentElement.style.position = 'relative';
       input.parentElement.appendChild(counter);
 
@@ -88,14 +88,21 @@
     }
 
     function truncateFields() {
-      const titleInput = document.querySelector('input[name="title"]');
-      const excerptInput = document.querySelector('textarea[name="excerpt"]');
-      if (titleInput && titleInput.value.length > 100) {
-        titleInput.value = titleInput.value.substring(0, 100);
-      }
-      if (excerptInput && excerptInput.value.length > 400) {
-        excerptInput.value = excerptInput.value.substring(0, 400);
-      }
+      // 尝试多个选择器
+      const selectors = [
+        'input[name="title"]', 'input[placeholder*="标题"]',
+        'textarea[name="excerpt"]', 'textarea[placeholder*="摘要"]'
+      ];
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          if (el.name === 'title' && el.value.length > 100) {
+            el.value = el.value.substring(0, 100);
+          }
+          if (el.name === 'excerpt' && el.value.length > 400) {
+            el.value = el.value.substring(0, 400);
+          }
+        });
+      });
     }
 
     document.addEventListener('click', (e) => {
@@ -105,19 +112,32 @@
       }
     });
 
-    // 等待CMS加载完成
+    // 等待CMS iframe加载完成 - 使用 MutationObserver 监听 DOM 变化
+    function initCharCount() {
+      // 尝试多个选择器
+      const titleInput = document.querySelector('input[name="title"]') || document.querySelector('input[placeholder*="标题"]');
+      const excerptInput = document.querySelector('textarea[name="excerpt"]') || document.querySelector('textarea[placeholder*="摘要"]');
+
+      if (titleInput) {
+        addCharCount(titleInput, 100);
+        console.log('✓ Title counter initialized');
+      }
+      if (excerptInput) {
+        addCharCount(excerptInput, 400);
+        console.log('✓ Excerpt counter initialized');
+      }
+    }
+
+    // 立即尝试，然后重复尝试
+    initCharCount();
+    setTimeout(initCharCount, 2000);
+    setTimeout(initCharCount, 4000);
+
+    // 使用 MutationObserver 监听 CMS iframe 内容加载
     if (window.CMS) {
       CMS.on('init', () => {
-        setTimeout(() => {
-          addCharCount(document.querySelector('input[name="title"]'), 100);
-          addCharCount(document.querySelector('textarea[name="excerpt"]'), 400);
-        }, 1000);
+        setTimeout(initCharCount, 2000);
       });
-    } else {
-      setTimeout(() => {
-        addCharCount(document.querySelector('input[name="title"]'), 100);
-        addCharCount(document.querySelector('textarea[name="excerpt"]'), 400);
-      }, 2000);
     }
   </script>
 </body>
