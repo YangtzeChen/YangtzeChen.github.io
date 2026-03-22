@@ -46,13 +46,6 @@ body {
   margin-top: 100px !important;
 }
 
-/* Title label centered, but other labels remain left-aligned */
-[class*="ControlContainer"]:first-of-type label {
-  display: block !important;
-  text-align: center !important;
-  width: 100% !important;
-}
-
 /* Editor Main Container */
 [class*="EditorContainer"] {
   max-width: 900px !important;
