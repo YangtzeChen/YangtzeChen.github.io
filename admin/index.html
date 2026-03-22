@@ -187,10 +187,37 @@
       console.log('✓ Cover mutex initialized');
     }
 
+    // B16: Hide image preview using MutationObserver (CSS can't penetrate iframe)
+    function hideImagePreviews() {
+      // 查找所有图片预览元素并隐藏
+      const selectors = [
+        'img[src*="/content/gallery/"]',
+        'img[src*="/content/blog/"]',
+        '[class*="checkerboard"]',
+        '[class*="ImageWrapper"] img',
+        '[class*="ImagePreview"] img'
+      ];
+
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          el.style.display = 'none';
+        });
+      });
+    }
+
+    function initImagePreviewHider() {
+      // 立即尝试隐藏
+      hideImagePreviews();
+
+      // 设置定时器持续隐藏（CMS可能在用户操作后动态添加元素）
+      setInterval(hideImagePreviews, 1000);
+    }
+
     // 立即尝试，然后重复尝试
     initCharCount();
     initColorPicker();
     initCoverMutex();
+    initImagePreviewHider();
     setTimeout(initCharCount, 2000);
     setTimeout(initCharCount, 4000);
     setTimeout(initColorPicker, 1500);
@@ -204,6 +231,7 @@
         setTimeout(initCharCount, 2000);
         setTimeout(initColorPicker, 2000);
         setTimeout(initCoverMutex, 2000);
+        setTimeout(initImagePreviewHider, 2000);
       });
     }
   </script>
