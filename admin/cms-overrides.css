@@ -46,13 +46,15 @@ body {
   margin-top: 100px !important;
 }
 
-/* Color picker input - align left instead of right */
-input[type="color"] {
-  order: -1 !important;
-  margin-right: 10px !important;
-  flex-shrink: 0 !important;
-  min-width: 60px !important;
-  width: 60px !important;
+/* Color picker input - set width to 200px and show color as background */
+input[id*="cardColor-field"] {
+  width: 200px !important;
+  background: linear-gradient(to right, var(--color-value, #cccccc) 0%, var(--color-value, #cccccc) 20px, transparent 20px) !important;
+}
+
+/* Also target by class if id pattern doesn't match */
+.css-83wr9v {
+  width: 200px !important;
 }
 
 /* Hide the help icon next to color picker */
