@@ -202,12 +202,16 @@ body {
   border: none !important;
   border-radius: 10px !important;
   overflow: hidden !important;
-  background: #fff !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease) !important;
   text-decoration: none !important;
-  display: flex !important;
-  flex-direction: column !important;
+  /* No flex direction - let content flow naturally */
+}
+
+/* With image: image fills entire card like frontend */
+[class*="GridCardLink"]:has(img),
+[class*="ListCardLink"]:has(img) {
+  aspect-ratio: 3 / 2 !important;
 }
 
 [class*="GridCardLink"]:hover,
@@ -216,11 +220,14 @@ body {
   box-shadow: 0 16px 48px rgba(0,0,0,0.12) !important;
 }
 
-/* --- Cover Image: forced 3:2 ratio, like frontend --- */
+/* --- Cover Image: fills card like frontend --- */
 [class*="GridCardLink"] img,
 [class*="ListCardLink"] img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
   width: 100% !important;
-  aspect-ratio: 3 / 2 !important;
+  height: 100% !important;
   object-fit: cover !important;
   display: block !important;
   transition: transform 0.5s var(--ease) !important;
@@ -231,20 +238,29 @@ body {
   transform: scale(1.04) !important;
 }
 
-/* --- Card Text Content: positioned at bottom with gradient --- */
-[class*="GridCardLink"] > div:not(:first-child):not(:last-child),
+/* --- No image fallback: gradient background like frontend accent colors --- */
+[class*="GridCardLink"]:not(:has(img)),
+[class*="ListCardLink"]:not(:has(img)) {
+  background: linear-gradient(135deg, #A8C5AE 0%, #7C9A82 50%, #F2F0EB 100%) !important;
+  aspect-ratio: 3 / 2 !important;
+}
+
+/* --- Card Text Content: positioned at bottom with gradient overlay --- */
+[class*="GridCardLink"] > div:not(:first-child),
 [class*="GridCardLink"] [class*="CardBody"],
 [class*="GridCardLink"] [class*="CardContent"],
 [class*="ListCardLink"] > div:not(:first-child) {
-  position: relative !important;
-  margin-top: -3rem !important;
-  padding: 3.5rem 1.25rem 1.25rem !important;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  padding: 3rem 1.25rem 1.25rem !important;
+  background: linear-gradient(transparent, rgba(0,0,0,0.65)) !important;
   color: #fff !important;
   border-radius: 0 !important;
 }
 
-/* --- Title styling --- */
+/* --- Title styling: white, like frontend --- */
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] [class*="CardTitle"] {
   font-size: 0.9rem !important;
@@ -257,11 +273,12 @@ body {
   white-space: nowrap !important;
 }
 
-/* --- Date styling --- */
+/* --- Date styling: translucent white, like frontend --- */
 [class*="GridCardLink"] [class*="CardDate"],
 [class*="GridCardLink"] [class*="Date"],
 [class*="GridCardLink"] small,
-[class*="GridCardLink"] time {
+[class*="GridCardLink"] time,
+[class*="GridCardLink"] span:not([class]) {
   font-size: 0.7rem !important;
   color: rgba(255,255,255,0.72) !important;
   text-transform: uppercase !important;
