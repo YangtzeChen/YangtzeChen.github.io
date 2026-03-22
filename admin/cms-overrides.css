@@ -23,6 +23,19 @@ body {
   background-color: #fff !important;
 }
 
+/* White cover mask at top to hide nav bar when scrolling */
+body::before {
+  content: '' !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 60px !important;
+  background: #fafafa !important;
+  z-index: 9998 !important;
+  pointer-events: none !important;
+}
+
 /* Editor Main Container */
 [class*="EditorContainer"] {
   max-width: 900px !important;
