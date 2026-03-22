@@ -219,21 +219,16 @@ body {
   align-items: flex-start !important;
 }
 
-/* Hide image preview, show filename only */
-[class*="ImageControl"] img,
-[class*="ImagePreview"] img,
-[class*="ImageWrapper"] img,
-[class*="ImageThumb"],
-[class*="ImageThumbnail"],
-[class*="ImagePreviewArea"],
-[class*="ImageDropZone"] {
+/* Hide image preview - target actual rendered elements */
+img[src*="/content/"] {
   display: none !important;
 }
 
-/* Also hide the background checkerboard pattern */
-[class*="ImageControl"] [class*="Inner"],
-[class*="ImageControl"] [class*="Placeholder"] {
-  background: #f4f4f4 !important;
+/* Hide checkerboard wrapper */
+[class*="checkerboard"],
+[class*="ImageWrapper"] {
+  background-image: none !important;
+  background-color: transparent !important;
 }
 
 /* ============================================================
