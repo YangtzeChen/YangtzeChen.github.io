@@ -21,12 +21,12 @@ collections:
     extension: "md"
     format: "frontmatter"
     view_style: "grid"
-    summary: "LT: {{updated}}\nCT: {{date}}\n{{title}}\n{{excerpt}}"
+    summary: "{{title}} | {{date}} | {{updated}}"
     fields:
       - { label: "标题", name: "title", widget: "string" }
       - { label: "日期", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
       - { label: "更新时间", name: "updated", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
-      - { label: "摘要", name: "excerpt", widget: "text", required: false, hint: "文章内容预览，将显示在后台卡片列表中" }
+      - { label: "摘要", name: "excerpt", widget: "text", required: false }
       - { label: "封面图", name: "image", widget: "image", required: false }
       - { label: "正文", name: "body", widget: "markdown" }
 
