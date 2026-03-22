@@ -223,6 +223,7 @@
         // 检查当前图片容器是否有图片（包括URL输入和上传）
         const container = btn.closest('[class*="ControlContainer"]');
         let hasImage = false;
+        let imageName = '';
 
         if (container) {
           // 检查所有可能的图片来源
@@ -233,6 +234,9 @@
           imgTags.forEach(img => {
             if (img.src && img.src.includes('/content/')) {
               hasImage = true;
+              // 从URL中提取文件名
+              const parts = img.src.split('/');
+              imageName = parts[parts.length - 1] || '已选图片';
             }
           });
 
@@ -241,6 +245,16 @@
             const val = input.value || input.getAttribute('value') || '';
             if (val.includes('/content/') || val.includes('.jpg') || val.includes('.png') || val.includes('.gif') || val.includes('.webp')) {
               hasImage = true;
+              // 优先使用有值的输入框内容
+              if (val && !imageName) {
+                // 如果是URL，提取文件名或显示完整URL
+                if (val.startsWith('http')) {
+                  imageName = val.length > 30 ? '...' + val.slice(-27) : val;
+                } else {
+                  const parts = val.split('/');
+                  imageName = parts[parts.length - 1] || '已选图片';
+                }
+              }
             }
           });
         }
@@ -248,12 +262,20 @@
         if (isRemoveBtn) {
           // 有图片时显示移除按钮，无图片时隐藏
           btn.style.display = hasImage ? '' : 'none';
+          // 显示图片名称或URL
+          if (hasImage && imageName) {
+            btn.textContent = imageName;
+          }
           // 保留移除按钮红色样式
           btn.style.background = '#d4a5a5';
           btn.style.color = '#fff';
           btn.style.border = 'none';
           btn.style.borderRadius = '4px';
           btn.style.padding = '4px 12px';
+          btn.style.maxWidth = '200px';
+          btn.style.overflow = 'hidden';
+          btn.style.textOverflow = 'ellipsis';
+          btn.style.whiteSpace = 'nowrap';
         }
 
         // 有图片时隐藏插入按钮，无图片时显示
