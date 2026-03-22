@@ -62,6 +62,11 @@ input[id*="cardColor-field"] {
   display: none !important;
 }
 
+/* Hide ColorSwatch question mark (?) icon */
+[class*="ColorSwatch"] {
+  display: none !important;
+}
+
 /* Editor Main Container */
 [class*="EditorContainer"] {
   max-width: 900px !important;
