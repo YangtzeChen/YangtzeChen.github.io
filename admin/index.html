@@ -213,18 +213,33 @@
       buttons.forEach(btn => {
         const text = btn.textContent.toLowerCase().trim();
         const isRemoveBtn = text.includes('移除') || text.includes('remove') || text.includes('delete');
-        const isInsertBtn = text.includes('插入') || text.includes('insert') || text.includes('选择') || text.includes('upload');
+        const isInsertBtn = text.includes('插入') || text.includes('insert') || text.includes('选择') || text.includes('upload') || text.includes('url');
         const isPreviewBtn = text.includes('预览') || text.includes('preview') || text.includes('browse');
 
         // 检查当前图片容器是否有图片（包括URL输入和上传）
         const container = btn.closest('[class*="ControlContainer"]');
-        const hasImage = container && (
-          container.querySelector('img[src*="/content/"]') ||
-          container.querySelector('input[type="text"][value*="/content/"]') ||
-          container.querySelector('input[value*=".jpg"]') ||
-          container.querySelector('input[value*=".png"]') ||
-          container.querySelector('input[value*=".gif"]')
-        );
+        let hasImage = false;
+
+        if (container) {
+          // 检查所有可能的图片来源
+          const imgTags = container.querySelectorAll('img');
+          const textInputs = container.querySelectorAll('input[type="text"]');
+
+          // 检查img标签
+          imgTags.forEach(img => {
+            if (img.src && img.src.includes('/content/')) {
+              hasImage = true;
+            }
+          });
+
+          // 检查text输入框的当前值
+          textInputs.forEach(input => {
+            const val = input.value || input.getAttribute('value') || '';
+            if (val.includes('/content/') || val.includes('.jpg') || val.includes('.png') || val.includes('.gif') || val.includes('.webp')) {
+              hasImage = true;
+            }
+          });
+        }
 
         if (isRemoveBtn) {
           // 有图片时显示移除按钮，无图片时隐藏
