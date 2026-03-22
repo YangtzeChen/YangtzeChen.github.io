@@ -23,14 +23,13 @@ body {
   background-color: #fff !important;
 }
 
-/* White cover mask above title input only */
-[class*="ControlContainer"]:first-of-type::before {
-  content: '' !important;
-  display: block !important;
-  height: 30px !important;
-  margin-bottom: -15px !important;
+/* White cover mask above the FIRST (title) input only */
+[class*="ControlContainer"]:first-of-type {
+  position: relative !important;
+  padding-top: 35px !important;
+  margin-top: -20px !important;
   background: #fafafa !important;
-  pointer-events: none !important;
+  z-index: 10 !important;
 }
 
 /* Editor Main Container */
