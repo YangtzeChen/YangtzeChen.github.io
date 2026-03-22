@@ -228,27 +228,22 @@ body {
   object-fit: cover !important;
   display: block !important;
   flex-shrink: 0 !important;
-  min-width: 0 !important;
 }
 
-/* --- Summary/Text Area: below image --- */
+/* --- Summary/Text Area: below image, white background --- */
 [class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
-[class*="GridCardLink"] [class*="CardBody"],
 [class*="GridCardLink"] > div:last-child {
   padding: 10px 12px !important;
   background: #fff !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 4px !important;
-  flex: 0 0 auto !important;
   overflow: hidden !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
   box-sizing: border-box !important;
 }
 
-/* --- ALL text in card with image: DARK color, truncate --- */
+/* --- ALL text in card: DARK color, truncate --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -267,34 +262,6 @@ body {
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
   display: block !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-}
-
-/* --- No image fallback: solid accent color, white text --- */
-[class*="ListCardLink"]:not(:has(img)),
-[class*="GridCardLink"]:not(:has(img)) {
-  background: #A8C5AE !important;
-}
-[class*="ListCardLink"]:not(:has(img)) [class*="Summary"],
-[class*="ListCardLink"]:not(:has(img)) > div:last-child,
-[class*="GridCardLink"]:not(:has(img)) [class*="Summary"],
-[class*="GridCardLink"]:not(:has(img)) > div:last-child {
-  background: transparent !important;
-}
-[class*="ListCardLink"]:not(:has(img)) h1,
-[class*="ListCardLink"]:not(:has(img)) h2,
-[class*="ListCardLink"]:not(:has(img)) h3,
-[class*="ListCardLink"]:not(:has(img)) p,
-[class*="ListCardLink"]:not(:has(img)) span,
-[class*="ListCardLink"]:not(:has(img)) a,
-[class*="GridCardLink"]:not(:has(img)) h1,
-[class*="GridCardLink"]:not(:has(img)) h2,
-[class*="GridCardLink"]:not(:has(img)) h3,
-[class*="GridCardLink"]:not(:has(img)) p,
-[class*="GridCardLink"]:not(:has(img)) span,
-[class*="GridCardLink"]:not(:has(img)) a {
-  color: #fff !important;
 }
 
 /* --- Remove any leftover default borders on list items --- */
