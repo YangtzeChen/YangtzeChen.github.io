@@ -88,6 +88,11 @@ body {
   padding-top: 0 !important;
 }
 
+/* First ControlContainer (title) label centered vertically relative to input */
+[class*="ControlContainer"]:first-of-type {
+  align-items: center !important;
+}
+
 /* Label text turns white when input is focused */
 [class*="ControlContainer"]:focus-within label {
   color: #fff !important;
