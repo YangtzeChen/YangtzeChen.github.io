@@ -238,10 +238,10 @@ body {
   transform: scale(1.04) !important;
 }
 
-/* --- No image fallback: gradient background like frontend accent colors --- */
+/* --- No image fallback: gradient like frontend (simple top-to-bottom) --- */
 [class*="GridCardLink"]:not(:has(img)),
 [class*="ListCardLink"]:not(:has(img)) {
-  background: linear-gradient(135deg, #A8C5AE 0%, #7C9A82 50%, #F2F0EB 100%) !important;
+  background: linear-gradient(to bottom, #A8C5AE 0%, #F2F0EB 100%) !important;
   aspect-ratio: 3 / 2 !important;
 }
 
@@ -260,9 +260,10 @@ body {
   border-radius: 0 !important;
 }
 
-/* --- Title styling: white, like frontend --- */
+/* --- CT (Card Title): white, like frontend --- */
 [class*="GridCardLink"] h2,
-[class*="GridCardLink"] [class*="CardTitle"] {
+[class*="GridCardLink"] [class*="CardTitle"],
+[class*="GridCardLink"] [class*="Title"] {
   font-size: 0.9rem !important;
   font-weight: 600 !important;
   color: #fff !important;
@@ -273,12 +274,12 @@ body {
   white-space: nowrap !important;
 }
 
-/* --- Date styling: translucent white, like frontend --- */
+/* --- LT (likely Date/Time): translucent white, like frontend --- */
 [class*="GridCardLink"] [class*="CardDate"],
 [class*="GridCardLink"] [class*="Date"],
+[class*="GridCardLink"] [class*="Time"],
 [class*="GridCardLink"] small,
-[class*="GridCardLink"] time,
-[class*="GridCardLink"] span:not([class]) {
+[class*="GridCardLink"] time {
   font-size: 0.7rem !important;
   color: rgba(255,255,255,0.72) !important;
   text-transform: uppercase !important;
