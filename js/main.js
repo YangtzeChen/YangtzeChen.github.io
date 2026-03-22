@@ -234,7 +234,13 @@
   function createPostCard(post, slug) {
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
-    const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
+
+    // Support both flat structure (image, cardColor) and nested structure (cover.image, cover.cardColor)
+    const coverData = post.cover || {};
+    const image = coverData.image || post.image;
+    const cardColor = coverData.cardColor || post.cardColor;
+
+    const imgHTML = image ? `<img class="post-card-thumb" src="${image}" alt="${post.title}" loading="lazy">` : '';
     const timeHTML = post.updated
       ? `<span class="post-time-brief">LT ${formatDate(post.updated)}</span><span class="post-time-brief">CT ${formatDate(post.date)}</span>`
       : `<span class="post-time-brief">CT ${formatDate(post.date)}</span>`;
@@ -243,13 +249,13 @@
     let gradientStyle = '';
     let textColorStyle = '';
 
-    if (post.image) {
+    if (image) {
       // Has image - use default styling
       gradientStyle = '';
-    } else if (post.cardColor) {
+    } else if (cardColor) {
       // Use custom card color for gradient
-      gradientStyle = 'background: ' + getGradientFromColor(post.cardColor) + ';';
-      const contrastColor = getContrastColor(post.cardColor, 0.5);
+      gradientStyle = 'background: ' + getGradientFromColor(cardColor) + ';';
+      const contrastColor = getContrastColor(cardColor, 0.5);
       if (contrastColor) {
         textColorStyle = 'color: ' + contrastColor + ';';
       }
@@ -269,15 +275,15 @@
       </div>
     `;
     // Handle missing image (404 or broken) and set gradient
-    if (post.image) {
+    if (image) {
       const img = card.querySelector('.post-card-thumb');
       if (img) {
         img.onerror = () => {
           img.remove();
           const wrap = card.querySelector('.post-card-img-wrap');
           if (wrap) {
-            if (post.cardColor) {
-              wrap.style.background = getGradientFromColor(post.cardColor);
+            if (cardColor) {
+              wrap.style.background = getGradientFromColor(cardColor);
             } else {
               wrap.style.background = getGradientBySlug(slug);
             }

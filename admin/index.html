@@ -128,32 +128,20 @@
       }
     }
 
-    // B14: Color picker for cardColor field
+    // B14: Color picker styling (color widget is native, just style it)
     function initColorPicker() {
-      const colorInput = document.querySelector('input[name="cardColor"]');
-      if (!colorInput) return;
-
-      // 如果已经有颜色选择器则跳过
-      if (colorInput.type === 'color') return;
-
-      // 转换为原生 color input
-      colorInput.type = 'color';
-      colorInput.style.width = '60px';
-      colorInput.style.height = '30px';
-      colorInput.style.border = '1px solid #ddd';
-      colorInput.style.borderRadius = '4px';
-      colorInput.style.cursor = 'pointer';
-
-      // 如果已有值，更新 picker 颜色
-      if (colorInput.value) {
-        colorInput.style.background = colorInput.value;
-      }
-
-      colorInput.addEventListener('input', () => {
-        colorInput.style.background = colorInput.value;
+      const colorInputs = document.querySelectorAll('input[type="color"]');
+      colorInputs.forEach(input => {
+        input.style.width = '60px';
+        input.style.height = '32px';
+        input.style.border = '1px solid #ddd';
+        input.style.borderRadius = '4px';
+        input.style.cursor = 'pointer';
+        input.style.padding = '2px';
       });
-
-      console.log('✓ Color picker initialized for cardColor');
+      if (colorInputs.length > 0) {
+        console.log('✓ Color picker styled, found ' + colorInputs.length);
+      }
     }
 
     // 立即尝试，然后重复尝试
