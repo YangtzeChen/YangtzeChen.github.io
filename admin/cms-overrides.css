@@ -228,7 +228,7 @@ body {
   flex-shrink: 0 !important;
 }
 
-/* --- Summary/Text Area: below image, white background --- */
+/* --- Summary/Text Area: below image --- */
 [class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
 [class*="GridCardLink"] [class*="CardBody"],
@@ -240,10 +240,9 @@ body {
   gap: 4px !important;
   flex: 0 0 auto !important;
   overflow: hidden !important;
-  word-break: break-all !important;
 }
 
-/* --- All text in text area: dark color, normal weight, truncate --- */
+/* --- All text: dark color, normal weight --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -276,13 +275,21 @@ body {
   white-space: normal !important;
 }
 
-/* --- No image fallback: gradient matches frontend post-card --- */
+/* --- No image fallback: solid accent color, white text on top --- */
 [class*="GridCardLink"]:not(:has(img)) {
-  background: linear-gradient(135deg, #A8C5AE 0%, #F2F0EB 100%) !important;
+  background: #A8C5AE !important;
 }
 [class*="GridCardLink"]:not(:has(img)) [class*="Summary"],
 [class*="GridCardLink"]:not(:has(img)) > div:last-child {
-  background: #fff !important;
+  background: transparent !important;
+}
+[class*="GridCardLink"]:not(:has(img)) h1,
+[class*="GridCardLink"]:not(:has(img)) h2,
+[class*="GridCardLink"]:not(:has(img)) h3,
+[class*="GridCardLink"]:not(:has(img)) p,
+[class*="GridCardLink"]:not(:has(img)) span,
+[class*="GridCardLink"]:not(:has(img)) a {
+  color: #fff !important;
 }
 
 /* --- Remove any leftover default borders on list items --- */
