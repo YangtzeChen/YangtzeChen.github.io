@@ -198,44 +198,58 @@ body {
 /* --- Grid Card Link (each card in collection grid view) --- */
 [class*="GridCardLink"],
 [class*="ListCardLink"] {
+  position: relative !important;
   border: none !important;
   border-radius: 10px !important;
   overflow: hidden !important;
   background: #fff !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease) !important;
   text-decoration: none !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 [class*="GridCardLink"]:hover,
 [class*="ListCardLink"]:hover {
-  transform: translateY(-5px) scale(1.01) !important;
-  box-shadow: 0 14px 40px rgba(0,0,0,0.12) !important;
+  transform: translateY(-6px) scale(1.01) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12) !important;
 }
 
-/* --- Cover Image: ensure it fills the card properly --- */
+/* --- Cover Image: forced 3:2 ratio, like frontend --- */
 [class*="GridCardLink"] img,
 [class*="ListCardLink"] img {
   width: 100% !important;
-  height: 180px !important;
+  aspect-ratio: 3 / 2 !important;
   object-fit: cover !important;
   display: block !important;
+  transition: transform 0.5s var(--ease) !important;
 }
 
-/* --- Card Text Content --- */
+[class*="GridCardLink"]:hover img,
+[class*="ListCardLink"]:hover img {
+  transform: scale(1.04) !important;
+}
+
+/* --- Card Text Content: positioned at bottom with gradient --- */
+[class*="GridCardLink"] > div:not(:first-child):not(:last-child),
 [class*="GridCardLink"] [class*="CardBody"],
 [class*="GridCardLink"] [class*="CardContent"],
-[class*="GridCardLink"] > div:last-child {
-  padding: 12px 14px !important;
-  background: #fff !important;
+[class*="ListCardLink"] > div:not(:first-child) {
+  position: relative !important;
+  margin-top: -3rem !important;
+  padding: 3.5rem 1.25rem 1.25rem !important;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+  color: #fff !important;
+  border-radius: 0 !important;
 }
 
+/* --- Title styling --- */
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] [class*="CardTitle"] {
   font-size: 0.9rem !important;
   font-weight: 600 !important;
-  color: #2c2c2c !important;
+  color: #fff !important;
   line-height: 1.4 !important;
   margin: 0 0 4px !important;
   overflow: hidden !important;
@@ -243,13 +257,15 @@ body {
   white-space: nowrap !important;
 }
 
+/* --- Date styling --- */
 [class*="GridCardLink"] [class*="CardDate"],
-[class*="GridCardLink"] [class*="CardDescription"],
+[class*="GridCardLink"] [class*="Date"],
 [class*="GridCardLink"] small,
-[class*="GridCardLink"] span {
-  font-size: 0.75rem !important;
-  color: #888 !important;
-  letter-spacing: 0.02em !important;
+[class*="GridCardLink"] time {
+  font-size: 0.7rem !important;
+  color: rgba(255,255,255,0.72) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
 }
 
 /* --- Remove any leftover default borders on list items --- */
