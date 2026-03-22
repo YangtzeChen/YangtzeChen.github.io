@@ -1,5 +1,15 @@
 # 版本修改说明
 
+## V2.16.0 — 2026-03-22
+
+### 🐛 Bug 修复与依赖优化
+
+- **修复 gallery 路径错误**：修正 `build_index.py` 和 GitHub Actions workflow 中 `content/gallery/items` 路径为正确的 `content/gallery`
+- **本地化 marked.js**：将 CDN 外部依赖 `marked.min.js` 下载到本地 `/js/marked.min.js`，提升加载速度并消除 CDN 依赖风险
+- **提取内联 CSS**：将 `admin/index.html` 中约 250 行内联 CSS 提取到独立的 `/admin/cms-overrides.css` 文件，提升可维护性
+
+---
+
 ## V2.15.0 — 2026-03-22
 
 ### 🖋️ 极致交互与兼容性解放 (B17: Font Weights & Sveltia Bindings)

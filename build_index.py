@@ -23,7 +23,7 @@ with open('content/blog/index.json', 'w', encoding='utf-8') as w:
 
 # Gallery
 out_gal = []
-for root, dirs, files in os.walk('content/gallery/items'):
+for root, dirs, files in os.walk('content/gallery'):
     for f in files:
         if f.endswith('.json'):
             with open(os.path.join(root, f), 'r', encoding='utf-8') as file:

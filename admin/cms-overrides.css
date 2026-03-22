@@ -1,0 +1,250 @@
+/* ============================================================
+   DECAP CMS 500PX / MEDIUM AESTHETIC OVERRIDE
+   ============================================================ */
+body {
+  background-color: #fafafa !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Top Nav Bar */
+[class*="AppHeader"] {
+  box-shadow: none !important;
+  border-bottom: 1px solid #eaeaea !important;
+  background-color: #fff !important;
+}
+
+/* Editor Main Container */
+[class*="EditorContainer"] {
+  max-width: 900px !important;
+  margin: 40px auto !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.04) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  border: none !important;
+  padding: 20px !important;
+}
+
+/* Remove Borders from typical Control Widgets */
+[class*="ControlContainer"] {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin-bottom: 25px !important;
+  padding: 0 !important;
+}
+
+[class*="ControlContainer"] > div {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Label Typogrpahy */
+[class*="FieldLabel"] {
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: #888 !important;
+  margin-bottom: 10px !important;
+}
+
+/* Inputs */
+input[type="text"], textarea {
+  border: 1px solid #efefef !important;
+  border-radius: 6px !important;
+  background: #fdfdfd !important;
+  padding: 12px 15px !important;
+  font-size: 16px !important;
+  transition: all 0.2s ease !important;
+}
+input[type="text"]:focus, textarea:focus {
+  border-color: #ccc !important;
+  outline: none !important;
+  background: #fff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+}
+
+/* ============================================================
+   Medium.com Style Markdown Editor 
+   ============================================================ */
+[class*="MarkdownControl"] {
+  border: none !important;
+}
+[class*="MarkdownControl"] [data-slate-editor] {
+  font-family: Georgia, serif !important;
+  font-size: 19px !important;
+  line-height: 1.8 !important;
+  color: #222 !important;
+  padding: 20px 0 !important;
+}
+
+/* ============================================================
+   500px Style Gallery Upload Grid 
+   ============================================================ */
+/* Target the List Editor Container to display as Flex Grid */
+[class*="ListControl"] > div:nth-child(2) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;
+  align-items: flex-start !important;
+}
+
+/* Each Individual Upload Block in the List */
+[class*="ListItemTopBar"] { display: none !important; } /* Hide the ugly top drag bar */
+[class*="ObjectControl"] {
+  flex: 1 1 280px !important;
+  max-width: 320px !important;
+  background: #fff !important;
+  border: 1px solid #eaeaea !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
+  transition: box-shadow 0.3s ease !important;
+}
+[class*="ObjectControl"]:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important;
+  border-color: #ddd !important;
+}
+
+/* ============================================================
+   B2: Admin Dashboard Shell
+   ============================================================ */
+[class*="AppMainContainer"] {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+[class*="SidebarContainer"] {
+  height: 100vh !important;
+  background: #f4f4f4 !important;
+  border-right: 1px solid #eaeaea !important;
+}
+
+body {
+  background-color: #fafafa !important;
+}
+
+/* ============================================================
+   B4: Admin Editor Framework
+   ============================================================ */
+/* Remove the 900px centering to allow two-column mode */
+[class*="EditorContainer"] {
+  max-width: 1400px !important;
+  width: 95% !important;
+  margin: 40px auto !important;
+}
+
+/* Hide the Date widget dynamically UNLESS it encounters a validation error */
+[class*="ControlContainer"]:has(label[for*="date"]):not(:has([class*="Error"])) {
+  display: none !important;
+}
+
+/* Beautify cover image upload (replace checkerboard) */
+[class*="ImageWrapper"], [class*="ImageControl"] img {
+  background-color: #f4f4f4 !important;
+  background-image: none !important; /* overrides previous checkerboard */
+  border-radius: 6px !important;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+
+/* ============================================================
+   B5: Admin Editor Media Widget (Markdown Inline Images)
+   ============================================================ */
+/* Hide the thick gray borders around inline components */
+[class*="BlockWrapper"] {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Hide the "IMAGE" label bar, show on hover */
+[class*="BlockLabel"] {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+}
+[class*="BlockWrapper"]:hover [class*="BlockLabel"] {
+  opacity: 1 !important;
+}
+
+/* ============================================================
+   B6: Admin Code Block Component Fix
+   ============================================================ */
+/* Fix overflow hidden clipping dropdowns */
+[class*="ControlContainer"]:has([class*="CodeEditor"]),
+[class*="SettingsPanel"] {
+  overflow: visible !important;
+  z-index: 9999 !important;
+}
+
+/* ============================================================
+   500PX MEDIA LIBRARY — Collection Grid View Overhaul
+   ============================================================ */
+
+/* --- Grid Container: tighter, more gallery-like --- */
+[class*="CollectionEntries"],
+[class*="EntriesCollection"] {
+  gap: 20px !important;
+}
+
+/* --- Grid Card Link (each card in collection grid view) --- */
+[class*="GridCardLink"],
+[class*="ListCardLink"] {
+  border: none !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  text-decoration: none !important;
+}
+
+[class*="GridCardLink"]:hover,
+[class*="ListCardLink"]:hover {
+  transform: translateY(-5px) scale(1.01) !important;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.12) !important;
+}
+
+
+
+/* --- Card Text Content --- */
+[class*="GridCardLink"] [class*="CardBody"],
+[class*="GridCardLink"] [class*="CardContent"],
+[class*="GridCardLink"] > div:last-child {
+  padding: 12px 14px !important;
+  background: #fff !important;
+}
+
+[class*="GridCardLink"] h2,
+[class*="GridCardLink"] [class*="CardTitle"] {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #2c2c2c !important;
+  line-height: 1.4 !important;
+  margin: 0 0 4px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[class*="GridCardLink"] [class*="CardDate"],
+[class*="GridCardLink"] [class*="CardDescription"],
+[class*="GridCardLink"] small,
+[class*="GridCardLink"] span {
+  font-size: 0.75rem !important;
+  color: #888 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* --- Remove any leftover default borders on list items --- */
+[class*="EntryListing"] li,
+[class*="CollectionEntries"] li {
+  border: none !important;
+  list-style: none !important;
+}
+
+/* --- Ensure the "New" create button stays clean --- */
+[class*="CollectionTop"] a[class*="NewEntry"] {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  border: none !important;
+}

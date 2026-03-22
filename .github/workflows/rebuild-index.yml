@@ -55,13 +55,16 @@ jobs:
 
       - name: Rebuild gallery index.json
         run: |
-          mkdir -p content/gallery/items
           cd content/gallery
           cat << 'EOF' > builder.py
           import os, json
           try:
               out = []
-              for root, dirs, files in os.walk('items'):
+              # Check if items directory exists, if not create it
+              items_dir = 'items'
+              if not os.path.exists(items_dir):
+                  os.makedirs(items_dir, exist_ok=True)
+              for root, dirs, files in os.walk(items_dir):
                   for f in files:
                       if f.endswith('.json'):
                           try:
