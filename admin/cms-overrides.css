@@ -41,6 +41,10 @@ body {
   background: transparent !important;
   margin-bottom: 25px !important;
   padding: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 15px !important;
 }
 
 [class*="ControlContainer"] > div {
@@ -48,13 +52,16 @@ body {
   box-shadow: none !important;
 }
 
-/* Label Typogrpahy */
+/* Label Typogrpahy - move to left side */
 [class*="FieldLabel"] {
   font-size: 13px !important;
   text-transform: uppercase !important;
   letter-spacing: 1px !important;
   color: #888 !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 0 !important;
+  min-width: 100px !important;
+  text-align: left !important;
+  padding-top: 12px !important;
 }
 
 /* Inputs */
