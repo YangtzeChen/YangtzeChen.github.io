@@ -78,7 +78,8 @@ input[id*="cardColor-field"] {
 input[id*="cardColor-field"],
 .css-83wr9v {
   position: relative !important;
-  padding-right: 40px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
 }
 
 /* Editor Main Container */
