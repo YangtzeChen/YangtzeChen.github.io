@@ -141,9 +141,10 @@
         input.style.flexShrink = '0'; // 防止缩小
       });
 
-      // 隐藏颜色选择器的问号/提示元素
+      // 颜色选择器的提示元素样式调整 - 往右移动并改为深灰色
       document.querySelectorAll('#nc-root [class*="ColorSwatch"]').forEach(el => {
-        el.style.display = 'none';
+        el.style.marginLeft = '50px';
+        el.style.opacity = '0.3';
       });
 
       // 确保color input的父容器不会因为有值而收缩
