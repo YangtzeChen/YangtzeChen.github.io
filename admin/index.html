@@ -310,6 +310,37 @@
         }, 300);
       }
     });
+  <script>
+    // B12: Register Custom Figure Component for Markdown Editor
+    // This allows users to insert beautiful captioned images in articles.
+    if (window.CMS) {
+      CMS.registerEditorComponent({
+        id: "figure",
+        label: "📷 高级排版配图 (带描述)",
+        fields: [
+          { name: "image", label: "图片", widget: "image" },
+          { name: "alt", label: "替换文本 (Alt) - 选填", widget: "string", required: false },
+          { name: "title", label: "图片描述文字 (Caption) - 选填", widget: "string", required: false }
+        ],
+        pattern: /^<figure>\s*<img src="(.*?)" alt="(.*?)"(?: title="(.*?)")?>\s*(?:<figcaption>(.*?)<\/figcaption>)?\s*<\/figure>$/m,
+        fromBlock: function(match) {
+          return {
+            image: match[1],
+            alt: match[2],
+            title: match[4] || match[3]
+          };
+        },
+        toBlock: function(obj) {
+          return `<figure>\n  <img src="${obj.image}" alt="${obj.alt || ""}" title="${obj.title || obj.alt || ""}">\n  <figcaption>${obj.title || ""}</figcaption>\n</figure>`;
+        },
+        toPreview: function(obj) {
+          return `<figure style="text-align: center; margin: 2rem 0; padding: 1rem; background: #fafafa; border-radius: 8px;">
+            <img src="${obj.image}" alt="${obj.alt || ""}" style="max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <figcaption style="font-size: 0.85rem; color: #888; margin-top: 0.8rem;">${obj.title || ""}</figcaption>
+          </figure>`;
+        }
+      });
+    }
   </script>
 </body>
 </html>

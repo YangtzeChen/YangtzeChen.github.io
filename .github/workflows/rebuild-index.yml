@@ -62,7 +62,7 @@ jobs:
               out = []
               for root, dirs, files in os.walk('items'):
                   for f in files:
-                      if f == 'index.json':
+                      if f.endswith('.json'):
                           try:
                               with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
                                   data = json.load(file)

@@ -146,7 +146,7 @@
     card.className = 'post-card fade-in';
     card.innerHTML = `
       <div class="post-card-img-wrap">
-        ${post.thumbnail ? `<img class="post-card-thumb" src="${post.thumbnail}" alt="${post.title}" loading="lazy">` : ''}
+        ${post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : ''}
         <div class="post-card-body">
           <p class="post-card-date">${formatDate(post.date)}</p>
           <h3 class="post-card-title">${post.title || '无标题'}</h3>
