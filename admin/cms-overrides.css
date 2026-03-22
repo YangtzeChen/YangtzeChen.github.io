@@ -39,8 +39,10 @@ body {
   pointer-events: none !important;
 }
 
-/* Add margin-top to title label */
-[class*="ControlContainer"]:first-of-type label {
+/* Add margin-top to title label, input and p */
+[class*="ControlContainer"]:first-of-type label,
+[class*="ControlContainer"]:first-of-type input,
+[class*="ControlContainer"]:first-of-type p {
   margin-top: 100px !important;
 }
 
