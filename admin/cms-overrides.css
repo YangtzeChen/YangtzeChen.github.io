@@ -222,8 +222,18 @@ body {
 /* Hide image preview, show filename only */
 [class*="ImageControl"] img,
 [class*="ImagePreview"] img,
-[class*="ImageWrapper"] img {
+[class*="ImageWrapper"] img,
+[class*="ImageThumb"],
+[class*="ImageThumbnail"],
+[class*="ImagePreviewArea"],
+[class*="ImageDropZone"] {
   display: none !important;
+}
+
+/* Also hide the background checkerboard pattern */
+[class*="ImageControl"] [class*="Inner"],
+[class*="ImageControl"] [class*="Placeholder"] {
+  background: #f4f4f4 !important;
 }
 
 /* ============================================================
