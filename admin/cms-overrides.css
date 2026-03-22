@@ -286,9 +286,9 @@ body {
   overflow: hidden !important;
 }
 
-/* --- No image fallback: accent gradient header --- */
+/* --- No image fallback: gradient matches frontend post-card --- */
 [class*="GridCardLink"]:not(:has(img)) {
-  background: linear-gradient(135deg, #A8C5AE 0%, #7C9A82 100%) !important;
+  background: linear-gradient(135deg, #A8C5AE 0%, #F2F0EB 100%) !important;
 }
 [class*="GridCardLink"]:not(:has(img)) [class*="Summary"] {
   background: #fff !important;
