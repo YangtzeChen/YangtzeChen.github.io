@@ -195,118 +195,106 @@ body {
   gap: 20px !important;
 }
 
-/* --- Grid Card Link (each card in collection grid view) --- */
+/* --- Grid Card Link: vertical layout, no image overlap --- */
 [class*="GridCardLink"],
 [class*="ListCardLink"] {
   position: relative !important;
   border: none !important;
   border-radius: 10px !important;
-  overflow: hidden !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+  overflow: visible !important;
+  background: #fff !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
   transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease) !important;
   text-decoration: none !important;
-  /* No flex direction - let content flow naturally */
-}
-
-/* With image: image fills entire card like frontend */
-[class*="GridCardLink"]:has(img),
-[class*="ListCardLink"]:has(img) {
-  aspect-ratio: 3 / 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 [class*="GridCardLink"]:hover,
 [class*="ListCardLink"]:hover {
-  transform: translateY(-6px) scale(1.01) !important;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.12) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
 }
 
-/* --- Cover Image: fills card like frontend --- */
-[class*="GridCardLink"] img,
-[class*="ListCardLink"] img {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
+/* --- Cover Image: at top, fixed height --- */
+[class*="GridCardLink"] > a > img,
+[class*="GridCardLink"] img {
   width: 100% !important;
-  height: 100% !important;
+  height: 160px !important;
   object-fit: cover !important;
   display: block !important;
-  transition: transform 0.5s var(--ease) !important;
+  border-radius: 10px 10px 0 0 !important;
 }
 
-[class*="GridCardLink"]:hover img,
-[class*="ListCardLink"]:hover img {
-  transform: scale(1.04) !important;
-}
-
-/* --- No image fallback: gradient like frontend (simple top-to-bottom) --- */
-[class*="GridCardLink"]:not(:has(img)),
-[class*="ListCardLink"]:not(:has(img)) {
-  background: linear-gradient(to bottom, #A8C5AE 0%, #F2F0EB 100%) !important;
-  aspect-ratio: 3 / 2 !important;
-}
-
-/* --- Card Text Content: positioned at bottom with gradient overlay --- */
-[class*="GridCardLink"] > div:not(:first-child),
-[class*="GridCardLink"] [class*="CardBody"],
+/* --- Summary/Text Area: below image --- */
+[class*="GridCardLink"] [class*="Summary"],
 [class*="GridCardLink"] [class*="CardContent"],
-[class*="ListCardLink"] > div:not(:first-child) {
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  padding: 3.5rem 1.25rem 1.25rem !important;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+[class*="GridCardLink"] [class*="CardBody"] {
+  padding: 12px 14px !important;
+  background: #fff !important;
   border-radius: 0 0 10px 10px !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
 }
 
-/* --- All text in card must be white --- */
+/* --- LT (Last Time/Updated): dark accent background --- */
+[class*="GridCardLink"] [class*="Summary"]:has(+ img),
+[class*="GridCardLink"] span:contains("LT"),
+[class*="GridCardLink"] p:contains("LT") {
+  background: rgba(124, 154, 130, 0.15) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  border-left: 3px solid #7C9A82 !important;
+}
+
+/* --- All text in text area: dark color --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
 [class*="GridCardLink"] p,
 [class*="GridCardLink"] span,
 [class*="GridCardLink"] a {
-  color: #fff !important;
+  color: #2c2c2c !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* --- LT/CT date lines: small, uppercase --- */
-[class*="GridCardLink"] [class*="Summary"] span,
-[class*="GridCardLink"] [class*="Summary"] p {
-  font-size: 0.65rem !important;
-  color: rgba(255,255,255,0.7) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  line-height: 1.6 !important;
-  margin: 0 !important;
+/* --- LT/CT lines: small, muted --- */
+[class*="GridCardLink"] [class*="Summary"] p,
+[class*="GridCardLink"] [class*="Summary"] span {
+  font-size: 0.7rem !important;
+  color: #6B6B6B !important;
+  line-height: 1.5 !important;
 }
 
 /* --- Title: bold --- */
 [class*="GridCardLink"] strong,
-[class*="GridCardLink"] b,
-[class*="GridCardLink"] [class*="Title"] {
+[class*="GridCardLink"] b {
   font-weight: 700 !important;
-  font-size: 0.9rem !important;
+  font-size: 0.95rem !important;
+  color: #2c2c2c !important;
   line-height: 1.4 !important;
-  display: block !important;
-  margin: 4px 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
 }
 
 /* --- Excerpt: two lines max --- */
 [class*="GridCardLink"] [class*="Excerpt"],
-[class*="GridCardLink"] [class*="excerpt"] {
-  font-size: 0.75rem !important;
-  color: rgba(255,255,255,0.85) !important;
+[class*="GridCardLink"] .excerpt {
+  font-size: 0.8rem !important;
+  color: #6B6B6B !important;
   line-height: 1.5 !important;
   display: -webkit-box !important;
   -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;
-  margin-top: 6px !important;
+}
+
+/* --- No image fallback: accent gradient header --- */
+[class*="GridCardLink"]:not(:has(img)) {
+  background: linear-gradient(135deg, #A8C5AE 0%, #7C9A82 100%) !important;
+}
+[class*="GridCardLink"]:not(:has(img)) [class*="Summary"] {
+  background: #fff !important;
 }
 
 /* --- Remove any leftover default borders on list items --- */
