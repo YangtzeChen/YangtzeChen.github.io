@@ -128,37 +128,59 @@
       }
     }
 
-    // B14: Color picker styling and mutual exclusion with image upload
+    // B14: Color picker styling - replace input with clickable button
     function initColorPicker() {
       const colorInputs = document.querySelectorAll('input[type="color"]');
       colorInputs.forEach(input => {
-        input.style.width = '60px';
-        input.style.height = '32px';
-        input.style.border = '1px solid #ddd';
-        input.style.borderRadius = '4px';
-        input.style.cursor = 'pointer';
-        input.style.padding = '2px';
-        input.style.flexShrink = '0'; // 防止缩小
+        // 隐藏原生input
+        input.style.display = 'none';
+
+        // 创建自定义颜色按钮
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.style.cssText = `
+          width: 60px !important;
+          height: 32px !important;
+          border: 1px solid #ddd !important;
+          border-radius: 4px !important;
+          cursor: pointer !important;
+          background: ${input.value || '#cccccc'} !important;
+          margin-left: 0 !important;
+        `;
+
+        // 点击按钮时触发原生颜色选择器
+        btn.addEventListener('click', () => {
+          // 临时显示原生input让它可以被点击
+          input.style.display = '';
+          input.click();
+          input.style.display = 'none';
+        });
+
+        // 原生input值变化时更新按钮颜色
+        input.addEventListener('input', () => {
+          btn.style.background = input.value || '#cccccc';
+        });
+
+        // 插入到input后面
+        input.parentNode.insertBefore(btn, input.nextSibling);
+
+        // 隐藏ColorSwatch提示元素
+        const container = input.closest('[class*="ControlContainer"]');
+        if (container) {
+          container.querySelectorAll('[class*="ColorSwatch"]').forEach(el => {
+            el.style.display = 'none';
+          });
+        }
       });
 
-      // 颜色选择器的提示元素样式调整 - 往右移动并改为深灰色
+      // 颜色选择器的提示元素样式调整
       document.querySelectorAll('#nc-root [class*="ColorSwatch"]').forEach(el => {
         el.style.marginLeft = '50px';
         el.style.opacity = '0.3';
       });
 
-      // 确保color input的父容器不会因为有值而收缩
-      const colorWrappers = document.querySelectorAll('input[type="color"]');
-      colorWrappers.forEach(input => {
-        const parent = input.parentElement;
-        if (parent) {
-          parent.style.flexShrink = '0';
-          parent.style.minWidth = '60px';
-        }
-      });
-
       if (colorInputs.length > 0) {
-        console.log('✓ Color picker styled, found ' + colorInputs.length);
+        console.log('✓ Color picker button created, found ' + colorInputs.length);
       }
     }
 
