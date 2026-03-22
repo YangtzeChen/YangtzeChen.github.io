@@ -145,11 +145,13 @@
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
     card.innerHTML = `
-      ${post.thumbnail ? `<img class="post-card-thumb" src="${post.thumbnail}" alt="${post.title}" loading="lazy">` : `<div class="post-card-thumb"></div>`}
-      <div class="post-card-body">
-        <p class="post-card-date">${formatDate(post.date)}</p>
-        <h3 class="post-card-title">${post.title || '无标题'}</h3>
-        <p class="post-card-excerpt">${post.excerpt || ''}</p>
+      <div class="post-card-img-wrap">
+        ${post.thumbnail ? `<img class="post-card-thumb" src="${post.thumbnail}" alt="${post.title}" loading="lazy">` : ''}
+        <div class="post-card-body">
+          <p class="post-card-date">${formatDate(post.date)}</p>
+          <h3 class="post-card-title">${post.title || '无标题'}</h3>
+          <p class="post-card-excerpt">${post.excerpt || ''}</p>
+        </div>
       </div>
     `;
     card.addEventListener('click', () => {
