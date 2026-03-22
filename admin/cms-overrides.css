@@ -33,8 +33,9 @@ body {
   top: -200px !important;
   left: 0 !important;
   right: 0 !important;
+  width: 100vw !important;
   height: 200px !important;
-  background: transparent !important;
+  background: #f0f0f0 !important;
   pointer-events: none !important;
 }
 
