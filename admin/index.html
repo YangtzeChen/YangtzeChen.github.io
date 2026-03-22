@@ -138,6 +138,7 @@
         input.style.borderRadius = '4px';
         input.style.cursor = 'pointer';
         input.style.padding = '2px';
+        input.style.flexShrink = '0'; // 防止缩小
       });
 
       // 隐藏颜色选择器旁边的问号引导图标
@@ -151,6 +152,16 @@
           if (container && container.querySelector('input[type="color"]')) {
             btn.style.display = 'none';
           }
+        }
+      });
+
+      // 确保color input的父容器不会因为有值而收缩
+      const colorWrappers = document.querySelectorAll('input[type="color"]');
+      colorWrappers.forEach(input => {
+        const parent = input.parentElement;
+        if (parent) {
+          parent.style.flexShrink = '0';
+          parent.style.minWidth = '60px';
         }
       });
 
