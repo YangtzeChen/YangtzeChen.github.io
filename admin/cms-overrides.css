@@ -88,6 +88,11 @@ body {
   padding-top: 0 !important;
 }
 
+/* Label text turns white when input is focused */
+[class*="ControlContainer"]:focus-within label {
+  color: #fff !important;
+}
+
 /* Inputs */
 input[type="text"], textarea {
   border: 1px solid #efefef !important;
