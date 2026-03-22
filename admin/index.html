@@ -66,6 +66,59 @@
         }
       });
     }
+
+    // B13: Character count for title (100) and excerpt (400)
+    function addCharCount(input, max) {
+      if (!input) return;
+      const counter = document.createElement('span');
+      counter.style.cssText = 'font-size:12px;color:#888;margin-left:8px;';
+      input.parentElement.style.position = 'relative';
+      input.parentElement.appendChild(counter);
+
+      function updateCount() {
+        counter.textContent = input.value.length + '/' + max;
+        if (input.value.length >= max * 0.9) {
+          counter.style.color = '#d4a5a5';
+        } else {
+          counter.style.color = '#888';
+        }
+      }
+      input.addEventListener('input', updateCount);
+      updateCount();
+    }
+
+    function truncateFields() {
+      const titleInput = document.querySelector('input[name="title"]');
+      const excerptInput = document.querySelector('textarea[name="excerpt"]');
+      if (titleInput && titleInput.value.length > 100) {
+        titleInput.value = titleInput.value.substring(0, 100);
+      }
+      if (excerptInput && excerptInput.value.length > 400) {
+        excerptInput.value = excerptInput.value.substring(0, 400);
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (btn && /(save|publish|保存|发布)/i.test(btn.innerText)) {
+        truncateFields();
+      }
+    });
+
+    // 等待CMS加载完成
+    if (window.CMS) {
+      CMS.on('init', () => {
+        setTimeout(() => {
+          addCharCount(document.querySelector('input[name="title"]'), 100);
+          addCharCount(document.querySelector('textarea[name="excerpt"]'), 400);
+        }, 1000);
+      });
+    } else {
+      setTimeout(() => {
+        addCharCount(document.querySelector('input[name="title"]'), 100);
+        addCharCount(document.querySelector('textarea[name="excerpt"]'), 400);
+      }, 2000);
+    }
   </script>
 </body>
 </html>
