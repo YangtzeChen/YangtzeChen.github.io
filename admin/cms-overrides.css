@@ -121,16 +121,12 @@ input[type="text"]:focus, textarea:focus {
 [class*="AppMainContainer"] {
   max-width: none !important;
   margin: 0 !important;
-  padding-top: 60px !important;
-  position: relative !important;
-  z-index: 1 !important;
 }
 
 [class*="SidebarContainer"] {
   height: 100vh !important;
   background: #f4f4f4 !important;
   border-right: 1px solid #eaeaea !important;
-  margin-top: 60px !important;
 }
 
 body {
@@ -144,8 +140,7 @@ body {
 [class*="EditorContainer"] {
   max-width: 1400px !important;
   width: 95% !important;
-  margin: 60px auto 20px !important;
-  padding-top: 20px !important;
+  margin: 40px auto !important;
 }
 
 /* Hide the Date widget dynamically UNLESS it encounters a validation error */
