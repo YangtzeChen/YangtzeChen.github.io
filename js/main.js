@@ -155,9 +155,13 @@
       </div>
     `;
     card.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.history.pushState(null, '', `/blog/?post=${slug}`);
-      handleBlogRoute();
+      if (window.location.pathname.startsWith('/blog')) {
+        e.preventDefault();
+        window.history.pushState(null, '', `/blog/?post=${slug}`);
+        handleBlogRoute();
+      } else {
+        window.location.href = `/blog/?post=${slug}`;
+      }
     });
     // Trigger fade-in after append
     requestAnimationFrame(() => card.classList.add('visible'));
@@ -219,10 +223,21 @@
       postHeader.innerHTML = `
         <h1>${meta.title || slug}</h1>
         <div class="post-meta-row">
-          <p class="post-card-date">${formatDate(meta.date)}</p>
+          <p class="post-card-date">发布于 ${formatDate(meta.date)}</p>
+          ${meta.updated ? `<p class="post-card-date" style="margin-left: 15px; opacity: 0.8;">| 更新于 ${formatDate(meta.updated)}</p>` : ''}
         </div>
       `;
       postBody.innerHTML = marked.parse(body);
+      
+      postHeader.classList.remove('fade-in', 'visible');
+      postBody.classList.remove('fade-in', 'visible');
+      void postHeader.offsetWidth; // flush CSS reflow
+      postHeader.classList.add('fade-in');
+      postBody.classList.add('fade-in');
+      requestAnimationFrame(() => {
+        postHeader.classList.add('visible');
+        postBody.classList.add('visible');
+      });
       document.title = `${meta.title || slug} — YangtzeChen`;
     } catch {
       postHeader.innerHTML = '<h1>文章未找到</h1>';
@@ -345,8 +360,14 @@
 
       latestImages.forEach((data) => {
         const item = document.createElement('div');
-        item.className = 'mosaic-item fade-in';
-        item.innerHTML = `<img src="${data.img.image}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">`;
+        item.className = 'masonry-item fade-in';
+        item.innerHTML = `
+          <img src="${data.img.image}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">
+          <div class="masonry-overlay">
+            <span class="masonry-title">${data.img.sub_title || data.post.title || '无题'}</span>
+            <span class="masonry-date">${formatDate(data.post.date)}</span>
+          </div>
+        `;
         item.addEventListener('click', () => openDetailView(data.img, data.post));
         container.appendChild(item);
         requestAnimationFrame(() => item.classList.add('visible'));
