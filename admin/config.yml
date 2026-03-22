@@ -21,7 +21,7 @@ collections:
     extension: "md"
     format: "frontmatter"
     view_style: "grid"
-    summary: '{{title}} \n作成: {{date}} \n更新: {{updated}}'
+    summary: "{{title}} \n作成: {{date}} \n更新: {{updated}}"
     fields:
       - { label: "标题", name: "title", widget: "string" }
       - { label: "日期", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
@@ -38,7 +38,7 @@ collections:
     extension: "json"
     format: "json"
     view_style: "grid"
-    summary: '{{title}} \n作成: {{date}} \n更新: {{updated}}'
+    summary: "{{title}} \n作成: {{date}} \n更新: {{updated}}"
     fields:
       - { label: "日期", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
       - { label: "更新时间", name: "updated", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
