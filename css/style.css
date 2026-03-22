@@ -991,6 +991,8 @@ a:hover { color: var(--rose); }
   justify-content: center;
   gap: 0.8rem;
   min-height: 280px;
+  column-span: all;
+  -webkit-column-span: all;
 }
 .empty-state-icon {
   font-size: 2.5rem;

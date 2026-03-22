@@ -141,7 +141,7 @@
   }
 
   // ---- Blog: Create a Post Card ----
-  // Random gradient colors for posts without cover image
+  // Fixed gradient colors for posts without cover image (deterministic by slug)
   const FALLBACK_GRADIENTS = [
     'linear-gradient(135deg, #a8c5ae 0%, #f2f0eb 100%)',
     'linear-gradient(135deg, #d4a5a5 0%, #f2f0eb 100%)',
@@ -152,8 +152,13 @@
     'linear-gradient(135deg, #c49e6b 0%, #f2f0eb 100%)',
     'linear-gradient(135deg, #6bc4be 0%, #f2f0eb 100%)'
   ];
-  function getRandomGradient() {
-    return FALLBACK_GRADIENTS[Math.floor(Math.random() * FALLBACK_GRADIENTS.length)];
+  function getGradientBySlug(slug) {
+    let hash = 0;
+    for (let i = 0; i < (slug || '').length; i++) {
+      hash = ((hash << 5) - hash) + slug.charCodeAt(i);
+      hash |= 0;
+    }
+    return FALLBACK_GRADIENTS[Math.abs(hash) % FALLBACK_GRADIENTS.length];
   }
 
   function createPostCard(post, slug) {
@@ -161,7 +166,7 @@
     card.className = 'post-card fade-in';
     const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
     card.innerHTML = `
-      <div class="post-card-img-wrap">
+      <div class="post-card-img-wrap" style="${!post.image ? 'background: ' + getGradientBySlug(slug) : ''}">
         ${imgHTML}
         <div class="post-card-body">
           <p class="post-card-date">${formatDate(post.date)}</p>
@@ -170,14 +175,14 @@
         </div>
       </div>
     `;
-    // Handle missing image (404 or broken) and set random gradient
+    // Handle missing image (404 or broken) and set gradient
     if (post.image) {
       const img = card.querySelector('.post-card-thumb');
       if (img) {
         img.onerror = () => {
           img.remove();
           const wrap = card.querySelector('.post-card-img-wrap');
-          if (wrap) wrap.style.background = getRandomGradient();
+          if (wrap) wrap.style.background = getGradientBySlug(slug);
         };
       }
     }
