@@ -28,10 +28,8 @@ collections:
       - { label: "更新时间", name: "updated", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", picker_utc: false, required: false }
       - { label: "是否开启展示", name: "draft", widget: "boolean", default: true }
       - { label: "摘要", name: "excerpt", widget: "text", required: false, hint: "最多400字", max_length: 400 }
-      - { label: "封面设置", name: "cover", widget: "object", fields: [
-          { label: "封面图", name: "image", widget: "image", required: false },
-          { label: "卡片渐变色", name: "cardColor", widget: "color", required: false }
-        ], required: false }
+      - { label: "封面图", name: "image", widget: "image", required: false }
+      - { label: "渐变色", name: "cardColor", widget: "color", required: false }
       - { label: "正文", name: "body", widget: "markdown" }
 
   - name: "gallery"

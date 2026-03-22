@@ -128,7 +128,7 @@
       }
     }
 
-    // B14: Color picker styling (color widget is native, just style it)
+    // B14: Color picker styling and mutual exclusion with image upload
     function initColorPicker() {
       const colorInputs = document.querySelectorAll('input[type="color"]');
       colorInputs.forEach(input => {
@@ -144,19 +144,66 @@
       }
     }
 
+    // B15: Mutual exclusion between image and color - when one is set, clear the other
+    function initCoverMutex() {
+      // Find image upload inputs and color inputs
+      const imageInputs = document.querySelectorAll('input[type="file"]');
+      const colorInputs = document.querySelectorAll('input[type="color"]');
+
+      imageInputs.forEach(imgInput => {
+        // Find the parent ControlContainer and the color input within it
+        const container = imgInput.closest('[class*="ControlContainer"]');
+        if (!container) return;
+
+        // Listen for file selection
+        imgInput.addEventListener('change', () => {
+          if (imgInput.files && imgInput.files.length > 0) {
+            // Image selected - find and clear the color input within the same container
+            const colorInput = container.querySelector('input[type="color"]');
+            if (colorInput) {
+              colorInput.value = '';
+              console.log('✓ Image selected, cleared color picker');
+            }
+          }
+        });
+      });
+
+      colorInputs.forEach(colorInput => {
+        colorInput.addEventListener('input', () => {
+          if (colorInput.value) {
+            // Color selected - find and clear the file input within the same container
+            const container = colorInput.closest('[class*="ControlContainer"]');
+            if (container) {
+              const fileInput = container.querySelector('input[type="file"]');
+              if (fileInput) {
+                fileInput.value = '';
+                console.log('✓ Color selected, cleared image upload');
+              }
+            }
+          }
+        });
+      });
+
+      console.log('✓ Cover mutex initialized');
+    }
+
     // 立即尝试，然后重复尝试
     initCharCount();
     initColorPicker();
+    initCoverMutex();
     setTimeout(initCharCount, 2000);
     setTimeout(initCharCount, 4000);
     setTimeout(initColorPicker, 1500);
     setTimeout(initColorPicker, 3000);
+    setTimeout(initCoverMutex, 1500);
+    setTimeout(initCoverMutex, 3000);
 
     // 使用 MutationObserver 监听 CMS iframe 内容加载
     if (window.CMS) {
       CMS.on('init', () => {
         setTimeout(initCharCount, 2000);
         setTimeout(initColorPicker, 2000);
+        setTimeout(initCoverMutex, 2000);
       });
     }
   </script>
