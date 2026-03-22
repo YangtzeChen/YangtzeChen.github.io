@@ -243,7 +243,7 @@ body {
   box-sizing: border-box !important;
 }
 
-/* --- ALL text in card: DARK color, truncate --- */
+/* --- ALL text in card: DARK color --- */
 [class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
 [class*="GridCardLink"] h3,
@@ -258,10 +258,21 @@ body {
   padding: 0 !important;
   font-size: 0.75rem !important;
   line-height: 1.4 !important;
+  display: block !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* --- First line (title) can wrap, last line truncates --- */
+[class*="GridCardLink"] > div:last-child p:first-child {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+[class*="GridCardLink"] > div:last-child p:not(:first-child) {
+  white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  display: block !important;
 }
 
 /* --- Remove any leftover default borders on list items --- */
