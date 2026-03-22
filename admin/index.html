@@ -262,9 +262,9 @@
         if (isRemoveBtn) {
           // 有图片时显示移除按钮，无图片时隐藏
           btn.style.display = hasImage ? '' : 'none';
-          // 显示图片名称或URL
+          // 显示 "移除 | 图片名称"
           if (hasImage && imageName) {
-            btn.textContent = imageName;
+            btn.textContent = '移除 | ' + imageName;
           }
           // 保留移除按钮红色样式
           btn.style.background = '#d4a5a5';
@@ -272,7 +272,7 @@
           btn.style.border = 'none';
           btn.style.borderRadius = '4px';
           btn.style.padding = '4px 12px';
-          btn.style.maxWidth = '200px';
+          btn.style.maxWidth = '250px';
           btn.style.overflow = 'hidden';
           btn.style.textOverflow = 'ellipsis';
           btn.style.whiteSpace = 'nowrap';
