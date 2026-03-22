@@ -52,6 +52,11 @@ input[type="color"] {
   margin-right: 10px !important;
 }
 
+/* Hide the help icon next to color picker */
+[class*="Hint"] {
+  display: none !important;
+}
+
 /* Editor Main Container */
 [class*="EditorContainer"] {
   max-width: 900px !important;
@@ -219,16 +224,25 @@ body {
   align-items: flex-start !important;
 }
 
-/* Hide image preview - target actual rendered elements */
-img[src*="/content/"] {
+/* Resize image preview to be much smaller instead of hiding */
+/* img[src*="/content/"] {
   display: none !important;
+} */
+
+/* Shrink image preview */
+img[src*="/content/"] {
+  max-width: 60px !important;
+  max-height: 40px !important;
+  object-fit: cover !important;
+  opacity: 0.5 !important;
 }
 
-/* Hide checkerboard wrapper */
+/* Shrink checkerboard wrapper */
 [class*="checkerboard"],
 [class*="ImageWrapper"] {
-  background-image: none !important;
-  background-color: transparent !important;
+  max-width: 80px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
 }
 
 /* ============================================================
