@@ -7,6 +7,7 @@
 - **修复 gallery 路径错误**：修正 `build_index.py` 和 GitHub Actions workflow 中 `content/gallery/items` 路径为正确的 `content/gallery`
 - **本地化 marked.js**：将 CDN 外部依赖 `marked.min.js` 下载到本地 `/js/marked.min.js`，提升加载速度并消除 CDN 依赖风险
 - **提取内联 CSS**：将 `admin/index.html` 中约 250 行内联 CSS 提取到独立的 `/admin/cms-overrides.css` 文件，提升可维护性
+- **无封面图文章卡片优化**：当文章无封面图时，卡片区域自动展示标题和摘要，底部文字渐变淡出效果
 
 ---
 
