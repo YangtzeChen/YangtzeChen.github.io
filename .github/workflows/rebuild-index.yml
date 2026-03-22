@@ -70,7 +70,7 @@ jobs:
                                   if 'images' in data:
                                       for img in data['images']:
                                           if img.get('image') and not img['image'].startswith('/'):
-                                              img['image'] = '/content/gallery/' + root.replace(r'\\', '/') + '/' + img['image']
+                                              img['image'] = '/content/gallery/' + root.replace('\\\\', '/') + '/' + img['image']
                                   out.append(data)
                           except Exception as e:
                               print(f'Skipping file {f} due to error: {e}')

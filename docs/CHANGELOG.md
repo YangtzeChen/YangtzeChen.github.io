@@ -1,5 +1,13 @@
 # 版本修改说明
 
+## V2.9.1 — 2026-03-22
+
+### 🩹 工作流热修复 (B9: Action Syntax Hotfix)
+
+- 修复了 B7 时由于 bash 双引号导致 Python 转义错乱的致命 Bug：`root.replace(r'\', '/')` 现已修正为安全的双反斜杠转义 `root.replace('\\\\', '/')`，彻底恢复 Github Action 相册索引生成的正常运转。
+
+---
+
 ## V2.9.0 — 2026-03-22
 
 ### 🪲 CMS 隐性验证失败修复 (B8: Hidden Validation Fix)
