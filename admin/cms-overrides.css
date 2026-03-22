@@ -152,6 +152,8 @@ input[type="text"]:focus, textarea:focus {
    ============================================================ */
 [class*="MarkdownControl"] {
   border: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 [class*="MarkdownControl"] [data-slate-editor] {
   font-family: Georgia, serif !important;
@@ -164,8 +166,15 @@ input[type="text"]:focus, textarea:focus {
   box-sizing: border-box !important;
 }
 
+/* Expand editor content area to edges with 30px margin */
+[class*="cms-editor-visual"] [data-slate-editor],
+[class*="Editor"] [data-slate-editor] {
+  padding-left: 30px !important;
+  padding-right: 30px !important;
+}
+
 /* ============================================================
-   500px Style Gallery Upload Grid 
+   500px Style Gallery Upload Grid
    ============================================================ */
 /* Target the List Editor Container to display as Flex Grid */
 [class*="ListControl"] > div:nth-child(2) {
