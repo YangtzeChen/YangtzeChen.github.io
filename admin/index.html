@@ -137,8 +137,10 @@
         if (!input) return;
         const colorValue = input.value || '#cccccc';
 
-        // 设置宽度和背景色
+        // 设置宽度、padding和背景色
         input.style.width = '200px';
+        input.style.paddingLeft = '20px';
+        input.style.paddingRight = '20px';
         input.style.background = colorValue;
         input.style.border = '1px solid #ddd';
         input.style.borderRadius = '4px';
