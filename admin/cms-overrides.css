@@ -23,16 +23,13 @@ body {
   background-color: #fff !important;
 }
 
-/* White cover mask at top to hide nav bar when scrolling */
-body::before {
+/* Decoy spacer above title input - nav bar covers this useless element instead of title */
+[class*="ControlContainer"]:first-of-type::before {
   content: '' !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
+  display: block !important;
   height: 60px !important;
-  background: #fafafa !important;
-  z-index: 9998 !important;
+  margin-bottom: -60px !important;
+  background: transparent !important;
   pointer-events: none !important;
 }
 
