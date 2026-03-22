@@ -256,17 +256,20 @@ body {
   right: 0 !important;
   padding: 3rem 1.25rem 1.25rem !important;
   background: linear-gradient(transparent, rgba(0,0,0,0.65)) !important;
-  color: #fff !important;
   border-radius: 0 !important;
 }
 
-/* --- CT (Card Title): white, like frontend --- */
+/* --- CT (Card Title): ALL text in card title area must be white --- */
+[class*="GridCardLink"] h1,
 [class*="GridCardLink"] h2,
+[class*="GridCardLink"] h3,
+[class*="GridCardLink"] [class*="Title"],
 [class*="GridCardLink"] [class*="CardTitle"],
-[class*="GridCardLink"] [class*="Title"] {
+[class*="GridCardLink"] [class*="EntryTitle"],
+[class*="GridCardLink"] a {
+  color: #fff !important;
   font-size: 0.9rem !important;
   font-weight: 600 !important;
-  color: #fff !important;
   line-height: 1.4 !important;
   margin: 0 0 4px !important;
   overflow: hidden !important;
@@ -274,14 +277,16 @@ body {
   white-space: nowrap !important;
 }
 
-/* --- LT (likely Date/Time): translucent white, like frontend --- */
-[class*="GridCardLink"] [class*="CardDate"],
+/* --- LT (Date/Time): ALL text in card date area must be translucent white --- */
+[class*="GridCardLink"] time,
 [class*="GridCardLink"] [class*="Date"],
 [class*="GridCardLink"] [class*="Time"],
+[class*="GridCardLink"] [class*="CardDate"],
+[class*="GridCardLink"] [class*="UpdatedAt"],
 [class*="GridCardLink"] small,
-[class*="GridCardLink"] time {
-  font-size: 0.7rem !important;
+[class*="GridCardLink"] span {
   color: rgba(255,255,255,0.72) !important;
+  font-size: 0.7rem !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
 }
