@@ -141,31 +141,9 @@
         input.style.flexShrink = '0'; // 防止缩小
       });
 
-      // 隐藏颜色选择器旁边的问号引导图标 - 使用XPath定位
-      const questionMarkSelectors = [
-        '[class*="ControlContainer"]:nth-child(7) > div:nth-child(3)',
-        '[class*="ControlContainer"]:nth-child(7) > div:nth-child(3) button',
-        '[class*="ControlContainer"]:nth-child(7) > div:nth-child(3) i',
-        '[class*="ControlContainer"]:nth-child(7) > div:nth-child(3) svg'
-      ];
-      questionMarkSelectors.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-          if (el.textContent.trim() === '?' || el.querySelector('svg')) {
-            el.style.display = 'none';
-          }
-        });
-      });
-
-      // 直接隐藏包含color字段的ControlContainer中的所有问号图标
-      document.querySelectorAll('[class*="ControlContainer"]').forEach(container => {
-        if (container.querySelector('input[type="color"]')) {
-          const allChildren = container.querySelectorAll('*');
-          allChildren.forEach(child => {
-            if (child.textContent.trim() === '?' && child.tagName !== 'INPUT') {
-              child.style.display = 'none';
-            }
-          });
-        }
+      // 隐藏颜色选择器的问号/提示元素
+      document.querySelectorAll('#nc-root [class*="ColorSwatch"]').forEach(el => {
+        el.style.display = 'none';
       });
 
       // 确保color input的父容器不会因为有值而收缩
