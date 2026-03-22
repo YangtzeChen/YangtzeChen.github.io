@@ -139,6 +139,21 @@
         input.style.cursor = 'pointer';
         input.style.padding = '2px';
       });
+
+      // 隐藏颜色选择器旁边的问号引导图标
+      const allButtons = document.querySelectorAll('[class*="ControlContainer"] button');
+      allButtons.forEach(btn => {
+        const text = btn.textContent.trim();
+        // 如果按钮只有问号
+        if (text === '?') {
+          // 检查是否在color input附近
+          const container = btn.closest('[class*="ControlContainer"]');
+          if (container && container.querySelector('input[type="color"]')) {
+            btn.style.display = 'none';
+          }
+        }
+      });
+
       if (colorInputs.length > 0) {
         console.log('✓ Color picker styled, found ' + colorInputs.length);
       }
