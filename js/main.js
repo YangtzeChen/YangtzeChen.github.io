@@ -144,9 +144,10 @@
   function createPostCard(post, slug) {
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
+    const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
     card.innerHTML = `
       <div class="post-card-img-wrap">
-        ${post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : ''}
+        ${imgHTML}
         <div class="post-card-body">
           <p class="post-card-date">${formatDate(post.date)}</p>
           <h3 class="post-card-title">${post.title || '无标题'}</h3>
@@ -154,6 +155,15 @@
         </div>
       </div>
     `;
+    // Handle missing image (404 or broken)
+    if (post.image) {
+      const img = card.querySelector('.post-card-thumb');
+      if (img) {
+        img.onerror = () => {
+          img.remove();
+        };
+      }
+    }
     card.addEventListener('click', (e) => {
       if (window.location.pathname.startsWith('/blog')) {
         e.preventDefault();
