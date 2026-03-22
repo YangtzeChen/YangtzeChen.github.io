@@ -154,8 +154,10 @@
         </div>
       </div>
     `;
-    card.addEventListener('click', () => {
-      window.location.href = `/blog/?post=${slug}`;
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.history.pushState(null, '', `/blog/?post=${slug}`);
+      handleBlogRoute();
     });
     // Trigger fade-in after append
     requestAnimationFrame(() => card.classList.add('visible'));
@@ -386,14 +388,14 @@
     document.getElementById('adv-lb-img').src = imgObj.image;
     document.getElementById('adv-lb-title').textContent = postObj.title || '相册分享';
     document.getElementById('adv-lb-date').textContent = formatDate(postObj.date);
-    document.getElementById('adv-lb-caption').innerHTML = postObj.caption ? postObj.caption.replace(/\\n/g, '<br>') : '';
+    document.getElementById('adv-lb-caption').innerHTML = postObj.caption ? postObj.caption.replace(/\\n|\n/g, '<br>') : '';
     
     const subinfo = document.getElementById('adv-lb-subinfo');
     if (imgObj.sub_title || imgObj.sub_caption) {
       subinfo.style.display = 'block';
       subinfo.innerHTML = `
         ${imgObj.sub_title ? '<h4>' + imgObj.sub_title + '</h4>' : ''}
-        ${imgObj.sub_caption ? '<p>' + imgObj.sub_caption.replace(/\\n/g, '<br>') + '</p>' : ''}
+        ${imgObj.sub_caption ? '<p>' + imgObj.sub_caption.replace(/\\n|\n/g, '<br>') + '</p>' : ''}
       `;
     } else {
       subinfo.style.display = 'none';

@@ -24,8 +24,8 @@ collections:
     summary: "{{title}} — {{date}} | 更新: {{updated}}"
     fields:
       - { label: "标题", name: "title", widget: "string" }
-      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false, required: false }
-      - { label: "更新时间", name: "updated", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false, required: false }
+      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD HH:mm:ss", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", required: false }
+      - { label: "更新时间", name: "updated", widget: "datetime", format: "YYYY-MM-DD HH:mm:ss", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", required: false }
       - { label: "摘要", name: "excerpt", widget: "text", required: false }
       - { label: "封面图", name: "image", widget: "image", required: false }
       - { label: "正文", name: "body", widget: "markdown" }
@@ -40,8 +40,8 @@ collections:
     view_style: "grid"
     summary: "{{title}} — {{date}} | 更新: {{updated}}"
     fields:
-      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false, required: false }
-      - { label: "更新时间", name: "updated", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false, required: false }
+      - { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD HH:mm:ss", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", required: false }
+      - { label: "更新时间", name: "updated", widget: "datetime", format: "YYYY-MM-DD HH:mm:ss", date_format: "YYYY-MM-DD", time_format: "HH:mm:ss", required: false }
       - { label: "图组主标题", name: "title", widget: "string", default: "新的相册" }
       - { label: "重磅封面图", name: "image", widget: "image", required: true, hint: "这必须是一张主力的展示图片，用于填补后台列表和各项首页缩略图" }
       - { label: "图组主描述", name: "caption", widget: "string", required: false }

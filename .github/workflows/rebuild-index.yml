@@ -89,6 +89,5 @@ jobs:
           git config user.email "actions@github.com"
           git add content/blog/index.json content/gallery/index.json
           git diff --cached --quiet || git commit -m "chore: rebuild content indexes [skip ci]"
-          git config pull.rebase true
-          git pull origin main || echo "git pull failed, continuing"
+          git pull origin main --rebase --autostash || true
           git push
