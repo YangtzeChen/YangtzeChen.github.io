@@ -74,7 +74,7 @@ input[id*="cardColor-field"],
 
 /* Editor Main Container */
 [class*="EditorContainer"] {
-  max-width: 900px !important;
+  max-width: 1400px !important;
   margin: 40px auto !important;
   box-shadow: 0 10px 40px rgba(0,0,0,0.04) !important;
   border-radius: 12px !important;
