@@ -165,7 +165,7 @@
     const card = document.createElement('article');
     card.className = 'post-card fade-in';
     const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
-    const timeHTML = post.updated && post.updated !== post.date
+    const timeHTML = post.updated
       ? `<span class="post-time-brief">CT ${formatDate(post.date)} · LT ${formatDate(post.updated)}</span>`
       : `<span class="post-time-brief">CT ${formatDate(post.date)}</span>`;
     card.innerHTML = `
