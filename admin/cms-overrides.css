@@ -158,7 +158,10 @@ input[type="text"]:focus, textarea:focus {
   font-size: 19px !important;
   line-height: 1.8 !important;
   color: #222 !important;
-  padding: 20px 0 !important;
+  padding: 20px 30px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* ============================================================
