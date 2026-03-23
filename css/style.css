@@ -1039,8 +1039,6 @@ a:hover { color: var(--rose); }
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
-  background: var(--bg-alt);
-  border-radius: var(--radius);
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
