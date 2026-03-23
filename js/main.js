@@ -317,7 +317,7 @@
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">📝</div>
-            <p>还没有文章，尝试通过 <a href="/admin/">后台管理</a> 发布第一篇吧！</p>
+            <p>暂无文章</p>
           </div>
         `;
         return;
@@ -328,7 +328,7 @@
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">📝</div>
-          <p>还没有文章，尝试通过 <a href="/admin/">后台管理</a> 发布第一篇吧！</p>
+          <p>暂无文章</p>
         </div>
       `;
     }
@@ -431,7 +431,7 @@
         grid.innerHTML = `
           <div class="empty-state" style="width: 100%; min-height: 280px;">
             <div class="empty-state-icon">📷</div>
-            <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+            <p>暂无照片</p>
           </div>
         `;
         return;
@@ -463,7 +463,7 @@
       grid.innerHTML = `
         <div class="empty-state" style="width: 100%; min-height: 280px;">
           <div class="empty-state-icon">📷</div>
-          <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+          <p>暂无照片</p>
         </div>
       `;
     }
@@ -494,7 +494,7 @@
         container.innerHTML = `
           <div class="empty-state" style="width: 100%; min-height: 280px;">
             <div class="empty-state-icon">📷</div>
-            <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+            <p>暂无照片</p>
           </div>
         `;
         return;
@@ -518,7 +518,7 @@
       container.innerHTML = `
         <div class="empty-state" style="width: 100%; min-height: 280px;">
           <div class="empty-state-icon">📷</div>
-          <p>还没有照片，尝试通过 <a href="/admin/">后台管理</a> 上传吧！</p>
+          <p>暂无照片</p>
         </div>
       `;
     }
