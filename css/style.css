@@ -945,6 +945,7 @@ a:hover { color: var(--rose); }
   display: flex;
   justify-content: center;
   padding: 3rem 0;
+  grid-column: 1 / -1;
 }
 
 .spinner::after {
@@ -1045,8 +1046,7 @@ a:hover { color: var(--rose); }
   justify-content: center;
   gap: 0.8rem;
   min-height: 280px;
-  column-span: all;
-  -webkit-column-span: all;
+  grid-column: 1 / -1;
 }
 .empty-state-icon {
   font-size: 2.5rem;
