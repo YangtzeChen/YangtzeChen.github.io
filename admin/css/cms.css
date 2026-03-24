@@ -147,10 +147,17 @@ body {
 }
 
 /* --- 搜索框 --- */
+.cms-search-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 0 var(--gap);
+}
+
 .cms-search-wrap {
   position: relative;
-  width: 240px;
-  transition: width 0.3s var(--ease);
+  width: 75%; /* 匹配前台样式 */
+  max-width: 800px;
 }
 .cms-search-wrap .field-input {
   padding-left: 2.2rem;
@@ -162,7 +169,6 @@ body {
 .cms-search-wrap .field-input:focus {
   background: var(--bg);
   border-color: var(--accent);
-  width: 300px;
   box-shadow: 0 4px 12px var(--shadow);
 }
 .cms-search-wrap .search-icon {
