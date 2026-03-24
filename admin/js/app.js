@@ -702,8 +702,7 @@
     selectedCoverImage = url;
     $coverUrlInput.value = '';
     
-    // 初始化裁切状态
-    if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'flex';
+    // 初始化裁切状态 (先不显示控制条)
     cropPanX = 0;
     cropPanY = 0;
     cropScale = 1;
@@ -711,7 +710,7 @@
     
     const img = new Image();
     img.className = 'cover-preview-img';
-    img.crossOrigin = 'anonymous'; // 避免同源画板污染
+    // 移除 img.crossOrigin = 'anonymous'; 避免不必要的 CORS 拦截
     
     img.onload = () => {
       const boxRect = $coverPreview.getBoundingClientRect();
@@ -722,12 +721,20 @@
       cropScale = Math.max(scaleW, scaleH);
       if ($coverZoomRange) $coverZoomRange.value = cropScale;
       updateCoverTransform();
+
+      // 图片加载成功后再显示预览和控制条
+      $coverPreview.style.display = 'block';
+      $coverPreview.classList.add('has-image');
+      $coverPreview.classList.remove('has-color');
+      if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'flex';
     };
     
     img.onerror = () => {
+      showToast('图片加载失败，请检查 URL 是否有效或存在跨域限制', 'error');
       $coverPreview.classList.remove('has-image');
       $coverPreview.style.display = 'none';
       if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'none';
+      selectedCoverImage = null;
     };
     
     img.src = url;
@@ -739,9 +746,6 @@
     
     $coverPreview.style.background = 'transparent';
     $coverPreview.style.backgroundColor = '';
-    $coverPreview.classList.add('has-image');
-    $coverPreview.classList.remove('has-color');
-    $coverPreview.style.display = 'block';
     $btnClearCover.style.display = '';
   }
 
