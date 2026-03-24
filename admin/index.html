@@ -121,8 +121,27 @@
 
               <!-- 第三框：预览 -->
               <div class="cover-box">
-                <label class="field-label">预览</label>
-                <div class="cover-preview" id="cover-preview"></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label class="field-label">预览 (可拖动缩放裁切)</label>
+                  <button type="button" id="btn-autofit" class="btn-ghost btn-sm" style="color:#53A777; border-color:#53A777; padding: 0.15rem 0.4rem; border-radius: 4px; font-size:0.75rem;">自适应</button>
+                </div>
+                <div class="cover-preview" id="cover-preview" style="margin-top: 0.5rem;">
+                  <div class="post-card-body" id="cover-overlay-sync" style="z-index: 10; display: flex;">
+                    <div class="post-card-header-row">
+                      <h3 class="post-card-title" id="sync-title">无标题</h3>
+                      <div class="post-card-dates">
+                        <span class="post-time-brief" id="sync-lt">LT: </span>
+                        <span class="post-time-brief" id="sync-ct">CT: </span>
+                      </div>
+                    </div>
+                    <p class="post-card-excerpt" id="sync-excerpt"></p>
+                  </div>
+                </div>
+                <div class="cover-zoom-ctrl" id="cover-zoom-ctrl" style="display:none; margin-top:0.75rem; align-items:center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                  <span>🔍 小</span>
+                  <input type="range" id="cover-zoom-range" min="0.1" max="5" step="0.01" value="1" style="flex:1; cursor: pointer;">
+                  <span>大</span>
+                </div>
               </div>
             </div>
 
@@ -146,6 +165,31 @@
       </div>
     </section>
 
+    <!-- 权限认证弹窗 (Aero Style) -->
+    <div id="cms-auth-modal" class="auth-overlay" style="display:none;">
+      <div class="auth-card fade-in">
+        <h2 class="auth-title">权限认证</h2>
+        <p class="auth-desc">请输入您的 GitHub 访问令牌与会话 PIN 码以解锁。一旦关闭页面，登录状态将立即销毁。</p>
+        
+        <div id="auth-setup-fields">
+          <div class="field-group">
+            <label class="field-label">GitHub Personal Access Token (PAT)</label>
+            <input type="password" id="auth-token-input" class="field-input" placeholder="ghp_xxxxxxxxxxxx">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">会话解锁 PIN 码 (Session PIN)</label>
+          <input type="password" id="auth-pin-input" class="field-input" placeholder="输入 4-8 位数字或字母">
+        </div>
+
+        <div class="auth-actions">
+          <button id="btn-auth-unlock" class="btn-primary w-full">解锁后台</button>
+        </div>
+        <p class="auth-footer">Token 将进行 AES-GCM 加密并仅存于会话缓存中。</p>
+      </div>
+    </div>
+
   <footer class="site-footer">
     <div class="container">
       <div class="footer-social">
@@ -156,6 +200,8 @@
   </footer>
 
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="/admin/js/auth.js"></script>
+  <script src="/admin/js/github.js"></script>
   <script src="/admin/js/app.js"></script>
 </body>
 </html>

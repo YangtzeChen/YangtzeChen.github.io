@@ -237,25 +237,22 @@
 
     const imgHTML = post.image ? `<img class="post-card-thumb" src="${post.image}" alt="${post.title}" loading="lazy">` : '';
     const timeHTML = post.updated
-      ? `<span class="post-time-brief">LT ${formatDate(post.updated)}</span><span class="post-time-brief">CT ${formatDate(post.date)}</span>`
-      : `<span class="post-time-brief">CT ${formatDate(post.date)}</span>`;
+      ? `<span class="post-time-brief">LT: ${formatDate(post.updated)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`
+      : `<span class="post-time-brief">LT: ${formatDate(post.date)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`;
 
     // Determine gradient and text color
     let gradientStyle = '';
     let textColorStyle = '';
 
     if (post.image) {
-      // Has image - use default styling
       gradientStyle = '';
     } else if (post.cardColor) {
-      // Use custom card color for gradient
       gradientStyle = 'background: ' + getGradientFromColor(post.cardColor) + ';';
       const contrastColor = getContrastColor(post.cardColor, 0.5);
       if (contrastColor) {
         textColorStyle = 'color: ' + contrastColor + ';';
       }
     } else {
-      // Fallback to slug-based gradient
       gradientStyle = 'background: ' + getGradientBySlug(slug) + ';';
     }
 
@@ -263,12 +260,15 @@
       <div class="post-card-img-wrap" style="${gradientStyle}">
         ${imgHTML}
         <div class="post-card-body" style="${textColorStyle}">
-          <p class="post-card-date">${timeHTML}</p>
-          <h3 class="post-card-title">${post.title || '无标题'}</h3>
+          <div class="post-card-header-row">
+            <h3 class="post-card-title">${post.title || '无标题'}</h3>
+            <div class="post-card-dates">${timeHTML}</div>
+          </div>
           <p class="post-card-excerpt">${post.excerpt || ''}</p>
         </div>
       </div>
     `;
+
     // Handle missing image (404 or broken) and set gradient
     if (post.image) {
       const img = card.querySelector('.post-card-thumb');
@@ -286,6 +286,7 @@
         };
       }
     }
+
     card.addEventListener('click', (e) => {
       if (window.location.pathname.startsWith('/blog')) {
         e.preventDefault();
@@ -295,6 +296,7 @@
         window.location.href = `/blog/?post=${slug}`;
       }
     });
+
     // Trigger fade-in after append
     requestAnimationFrame(() => card.classList.add('visible'));
     return card;

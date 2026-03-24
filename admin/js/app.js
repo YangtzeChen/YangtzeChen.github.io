@@ -36,7 +36,26 @@
   const $coverUploadWrap = document.getElementById('cover-upload-wrap');
   const $coverUploadPreview = document.getElementById('cover-upload-preview');
   const $coverPreview = document.getElementById('cover-preview');
+  const $coverZoomCtrl = document.getElementById('cover-zoom-ctrl');
+  const $coverZoomRange = document.getElementById('cover-zoom-range');
   const $btnClearCover = document.getElementById('btn-clear-cover');
+  const $btnAutofit = document.getElementById('btn-autofit');
+
+  // ---- Auth 元素 ----
+  const $authModal = document.getElementById('cms-auth-modal');
+  const $authSetupFields = document.getElementById('auth-setup-fields');
+  const $authTokenInput = document.getElementById('auth-token-input');
+  const $authPinInput = document.getElementById('auth-pin-input');
+  const $btnAuthUnlock = document.getElementById('btn-auth-unlock');
+
+  // ---- 裁剪与拖拽状态 ----
+  let cropScale = 1;
+  let cropPanX = 0;
+  let cropPanY = 0;
+  let isDraggingCover = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let coverImgEl = null;
 
   // ---- 工具：获取北京时间（UTC+8） ----
   function beijingNow() {
@@ -54,12 +73,75 @@
 
   // ---- 初始化 ----
   async function init() {
-    await loadArticles();
-    setupEventListeners();
     initQuill();
     loadGalleryForCoverPicker();
+    setupEventListeners();
+    setupAuthEventListeners();
+
+    // 检查认证状态
+    if (CMS_AUTH.hasStoredSession()) {
+      // 存在会话，隐藏 Token 输入，仅要求 PIN 码解锁
+      if($authSetupFields) $authSetupFields.style.display = 'none';
+      if($authModal) {
+        $authModal.style.display = 'flex';
+        const card = $authModal.querySelector('.auth-card');
+        if (card) setTimeout(() => card.classList.add('visible'), 50);
+      }
+    } else {
+      // 全新会话，要求输入 Token + PIN
+      if($authSetupFields) $authSetupFields.style.display = 'block';
+      if($authModal) {
+        $authModal.style.display = 'flex';
+        const card = $authModal.querySelector('.auth-card');
+        if (card) setTimeout(() => card.classList.add('visible'), 50);
+      }
+    }
+
     // 填充默认发布日期（北京时区）
     $dateInput.value = beijingNow();
+  }
+
+  function setupAuthEventListeners() {
+    $btnAuthUnlock.addEventListener('click', async () => {
+      const pin = $authPinInput.value;
+      if (!pin) return showToast('请输入 PIN 码', 'error');
+
+      const oldBtnText = $btnAuthUnlock.textContent;
+      $btnAuthUnlock.disabled = true;
+      $btnAuthUnlock.textContent = '验证中...';
+
+      let success = false;
+      if (CMS_AUTH.hasStoredSession()) {
+        success = await CMS_AUTH.unlock(pin);
+      } else {
+        const token = $authTokenInput.value.trim();
+        if (!token) {
+          showToast('请输入 GitHub Token', 'error');
+          reset(); return;
+        }
+        // 核心改进：预检 Token 是否真实有效
+        const isValid = await CMS_AUTH.validateToken(token);
+        if (!isValid) {
+          showToast('Invalid GitHub Token: 无法连接或权限不足', 'error');
+          reset(); return;
+        }
+        success = await CMS_AUTH.lock(token, pin);
+      }
+
+      if (success) {
+        $authModal.style.display = 'none';
+        showToast('认证成功，已进入加密会话', 'success');
+        await loadArticles();
+      } else {
+        showToast('认证失败：PIN 码错误或记录冲突', 'error');
+      }
+
+      function reset() {
+        $btnAuthUnlock.disabled = false;
+        $btnAuthUnlock.textContent = oldBtnText;
+      }
+      reset();
+    });
   }
 
   // ---- 加载文章列表 ----
@@ -83,6 +165,14 @@
   }
 
   // ---- 渲染文章列表 ----
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
   function renderArticleList() {
     if (articles.length === 0) {
       $articleList.innerHTML = `
@@ -92,23 +182,49 @@
         </div>`;
       return;
     }
-    $articleList.innerHTML = articles.map(post => `
-      <div class="article-item" data-slug="${post.slug}">
-        <div class="article-info">
-          <div class="article-title">${escHtml(post.title || '无标题')}</div>
-          <div class="article-meta">
-            <span>${post.date ? post.date.slice(0, 10) : '未知日期'}</span>
-            <span>${post.excerpt ? post.excerpt.slice(0, 30) + '...' : '无摘要'}</span>
-          </div>
-        </div>
+    
+    $articleList.innerHTML = articles.map(post => {
+      const imgHTML = post.image ? `<img class="post-card-thumb" src="${escHtml(post.image)}" alt="${escHtml(post.title)}" loading="lazy">` : '';
+      const timeHTML = post.updated
+        ? `<span class="post-time-brief">LT: ${formatDate(post.updated)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`
+        : `<span class="post-time-brief">LT: ${formatDate(post.date)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`;
+
+      let gradientStyle = '';
+      let textColorStyle = '';
+
+      if (post.image) {
+        gradientStyle = '';
+      } else if (post.cardColor) {
+        gradientStyle = 'background: ' + getGradientFromColor(post.cardColor) + ';';
+        const contrastColor = getContrastColor(post.cardColor, 0.5);
+        if (contrastColor) {
+          textColorStyle = 'color: ' + contrastColor + ';';
+        }
+      } else {
+        gradientStyle = 'background: ' + getGradientBySlug(post.slug) + ';';
+      }
+
+      return `
+      <article class="post-card fade-in visible" data-slug="${post.slug}">
         <span class="article-badge ${post.draft ? 'badge-draft' : 'badge-published'}">
-          ${post.draft ? '草稿' : '已发布'}
+           ${post.draft ? '草稿' : '已发布'}
         </span>
-        <div class="article-actions">
+        <div class="cms-card-overlay">
           <button class="btn-icon edit-btn" data-slug="${post.slug}">编辑</button>
           <button class="btn-icon danger delete-btn" data-slug="${post.slug}">删除</button>
         </div>
-      </div>`).join('');
+        <div class="post-card-img-wrap" style="${gradientStyle}">
+          ${imgHTML}
+          <div class="post-card-body" style="${textColorStyle}">
+            <div class="post-card-header-row">
+              <h3 class="post-card-title">${escHtml(post.title || '无标题')}</h3>
+              <div class="post-card-dates">${timeHTML}</div>
+            </div>
+            <p class="post-card-excerpt">${escHtml(post.excerpt || '')}</p>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
 
     // 绑定事件
     $articleList.querySelectorAll('.edit-btn').forEach(btn => {
@@ -121,6 +237,12 @@
       btn.addEventListener('click', e => {
         e.stopPropagation();
         if (confirm('确定删除这篇文章？')) deleteArticle(btn.dataset.slug);
+      });
+    });
+    $articleList.querySelectorAll('.post-card').forEach(card => {
+      card.addEventListener('click', e => {
+        if(e.target.closest('.cms-card-overlay')) return;
+        showForm(card.dataset.slug);
       });
     });
   }
@@ -156,14 +278,19 @@
     $excerptInput.value = '';
     $excerptCount.textContent = '0/300';
     $visibleSwitch.checked = true;
-    $customColor.value = '#E98181';
-    $customColorText.value = '#E98181';
-    selectedCoverColor = null;
-    selectedCoverImage = null;
-    clearCoverPreview();
+    
+    // reset sync overlay
+    document.getElementById('sync-title').textContent = '无标题';
+    document.getElementById('sync-excerpt').textContent = '';
+    document.getElementById('sync-ct').textContent = 'CT: ' + $dateInput.value.replace('T', ' ');
+    document.getElementById('sync-lt').style.display = 'none';
     quillEditor.setContents([]);
-    // 清除预设选中
-    $colorPresets.querySelectorAll('.color-preset').forEach(p => p.classList.remove('selected'));
+    // 默认选中第一个预设封面颜色
+    selectCoverColor('#E98181');
+    
+    // 重置裁切状态
+    cropScale = 1; cropPanX = 0; cropPanY = 0;
+    if($coverZoomRange) $coverZoomRange.value = 1;
   }
 
   async function loadArticleForEdit(slug) {
@@ -184,13 +311,24 @@
       const { meta, body } = parseFrontmatter(text);
 
       $slugInput.value = slug;
-      $dateInput.value = (meta.date || '').slice(0, 16);
-      $updatedInput.value = meta.updated ? meta.updated.slice(0, 16) : '';
+      $dateInput.value = (meta.date || '').slice(0, 16).replace(' ', 'T');
+      $updatedInput.value = meta.updated ? meta.updated.slice(0, 16).replace(' ', 'T') : '';
       $titleInput.value = meta.title || '';
       $titleCount.textContent = `${(meta.title || '').length}/50`;
       $excerptInput.value = meta.excerpt || '';
       $excerptCount.textContent = `${(meta.excerpt || '').length}/300`;
       $visibleSwitch.checked = meta.draft !== 'true';
+
+      // sync overlay
+      document.getElementById('sync-title').textContent = meta.title || '无标题';
+      document.getElementById('sync-excerpt').textContent = meta.excerpt || '';
+      document.getElementById('sync-ct').textContent = 'CT: ' + (meta.date || '').slice(0, 19).replace('T', ' ');
+      if (meta.updated) {
+        document.getElementById('sync-lt').style.display = 'inline';
+        document.getElementById('sync-lt').textContent = 'LT: ' + meta.updated.slice(0, 19).replace('T', ' ');
+      } else {
+        document.getElementById('sync-lt').style.display = 'none';
+      }
       $customColor.value = meta.cardColor || '#FF6B6B';
       $customColorText.value = meta.cardColor || '#FF6B6B';
 
@@ -203,9 +341,15 @@
 
       quillEditor.setContents([]);
       if (body.trim()) {
-        quillEditor.clipboardConverter.convert(body);
+        if (quillEditor.clipboard && typeof quillEditor.clipboard.dangerouslyPasteHTML === 'function') {
+          quillEditor.clipboard.dangerouslyPasteHTML(body);
+        } else {
+          // Fallback if older quill or slightly different build
+          quillEditor.root.innerHTML = body;
+        }
       }
-    } catch {
+    } catch (e) {
+      console.error('加载文章抛错:', e);
       showToast('加载文章失败', 'error');
       showList();
     }
@@ -240,14 +384,17 @@
     // 新建
     document.getElementById('btn-new-article').addEventListener('click', () => showForm());
 
-    // 取消（返回列表）
-    document.getElementById('back-to-list').addEventListener('click', e => {
+    // 导航栏文章 Tab / 取消（返回列表）
+    const goBack = e => {
       e.preventDefault();
       if (currentEditSlug || $titleInput.value || quillEditor.getText().trim().length > 0) {
         if (!confirm('确定取消？未保存的内容将丢失。')) return;
       }
       showList();
-    });
+    };
+    document.getElementById('back-to-list').addEventListener('click', goBack);
+    const navArticleBtn = document.querySelector('.cms-tabs button[data-tab="articles"]');
+    if (navArticleBtn) navArticleBtn.addEventListener('click', goBack);
 
     // 保存草稿
     document.getElementById('btn-save-draft').addEventListener('click', () => saveArticle(true));
@@ -255,14 +402,31 @@
     // 发布
     document.getElementById('btn-publish').addEventListener('click', () => saveArticle(false));
 
-    // 标题计数
+    // 标题计数与实时预览同步
     $titleInput.addEventListener('input', () => {
       $titleCount.textContent = `${$titleInput.value.length}/50`;
+      document.getElementById('sync-title').textContent = $titleInput.value || '无标题';
     });
 
-    // 摘要计数
+    // 摘要计数与实时预览同步
     $excerptInput.addEventListener('input', () => {
       $excerptCount.textContent = `${$excerptInput.value.length}/300`;
+      document.getElementById('sync-excerpt').textContent = $excerptInput.value || '';
+    });
+    
+    // 日期实时同步
+    $dateInput.addEventListener('input', () => {
+      document.getElementById('sync-ct').textContent = 'CT: ' + $dateInput.value.replace('T', ' ');
+    });
+    $updatedInput.addEventListener('input', () => {
+      const v = $updatedInput.value;
+      const $lt = document.getElementById('sync-lt');
+      if (v) {
+        $lt.style.display = 'inline';
+        $lt.textContent = 'LT: ' + v.replace('T', ' ');
+      } else {
+        $lt.style.display = 'none';
+      }
     });
 
     // 封面色预设
@@ -320,9 +484,100 @@
     $btnClearCover.addEventListener('click', () => {
       clearCoverPreview();
     });
+
+    // 自适应最佳缩放
+    if ($btnAutofit) {
+      $btnAutofit.addEventListener('click', () => {
+        if (!selectedCoverImage || !coverImgEl) return;
+        const boxRect = $coverPreview.getBoundingClientRect();
+        const boxW = boxRect.width || 420;
+        const boxH = boxRect.height || 280;
+        const scaleW = boxW / coverImgEl.naturalWidth;
+        const scaleH = boxH / coverImgEl.naturalHeight;
+        cropScale = Math.max(scaleW, scaleH);
+        cropPanX = 0;
+        cropPanY = 0;
+        if ($coverZoomRange) $coverZoomRange.value = cropScale;
+        updateCoverTransform();
+      });
+    }
+
+    // 缩放滑块
+    if ($coverZoomRange) {
+      $coverZoomRange.addEventListener('input', () => {
+        cropScale = parseFloat($coverZoomRange.value);
+        updateCoverTransform();
+      });
+    }
+
+    // 滚轮缩放
+    $coverPreview.addEventListener('wheel', (e) => {
+      if (!selectedCoverImage || !coverImgEl) return;
+      e.preventDefault();
+      const zoomStep = 0.05;
+      cropScale += e.deltaY < 0 ? zoomStep : -zoomStep;
+      cropScale = Math.min(Math.max(cropScale, 0.1), 5);
+      if ($coverZoomRange) $coverZoomRange.value = cropScale;
+      updateCoverTransform();
+    }, { passive: false });
+
+    // 鼠标/手指拖动
+    function onDragStart(e) {
+      if (!selectedCoverImage || !coverImgEl) return;
+      isDraggingCover = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      dragStartX = clientX - cropPanX;
+      dragStartY = clientY - cropPanY;
+    }
+    function onDragMove(e) {
+      if (!isDraggingCover) return;
+      e.preventDefault(); 
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      cropPanX = clientX - dragStartX;
+      cropPanY = clientY - dragStartY;
+      updateCoverTransform();
+    }
+    function onDragEnd() {
+      isDraggingCover = false;
+    }
+    
+    $coverPreview.addEventListener('mousedown', onDragStart);
+    $coverPreview.addEventListener('touchstart', onDragStart, { passive: false });
+    window.addEventListener('mousemove', onDragMove);
+    window.addEventListener('touchmove', onDragMove, { passive: false });
+    window.addEventListener('mouseup', onDragEnd);
+    window.addEventListener('touchend', onDragEnd);
+  }
+
+  function updateCoverTransform() {
+    if (coverImgEl) {
+      coverImgEl.style.transform = `translate(calc(-50% + ${cropPanX}px), calc(-50% + ${cropPanY}px)) scale(${cropScale})`;
+    }
   }
 
   // ---- 提取自前台的颜色渲染逻辑 ----
+  const FALLBACK_GRADIENTS = [
+    'linear-gradient(135deg, #a8c5ae 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #d4a5a5 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6ba3be 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6b9e6b 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #c1a87d 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #9e8fc4 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #c49e6b 0%, #f2f0eb 100%)',
+    'linear-gradient(135deg, #6bc4be 0%, #f2f0eb 100%)'
+  ];
+
+  function getGradientBySlug(slug) {
+    let hash = 0;
+    for (let i = 0; i < (slug || '').length; i++) {
+      hash = ((hash << 5) - hash) + slug.charCodeAt(i);
+      hash |= 0;
+    }
+    return FALLBACK_GRADIENTS[Math.abs(hash) % FALLBACK_GRADIENTS.length];
+  }
+
   function parseColor(colorStr) {
     if (!colorStr) return null;
     colorStr = colorStr.trim();
@@ -334,7 +589,24 @@
       g: parseInt(match[2] + match[2], 16),
       b: parseInt(match[3] + match[3], 16)
     };
+    match = colorStr.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+    if (match) return { r: parseInt(match[1], 10), g: parseInt(match[2], 10), b: parseInt(match[3], 10) };
     return null;
+  }
+
+  function getLuminance(rgb) {
+    const [rs, gs, bs] = [rgb.r / 255, rgb.g / 255, rgb.b / 255];
+    const r = rs <= 0.03928 ? rs / 12.92 : Math.pow((rs + 0.055) / 1.055, 2.4);
+    const g = gs <= 0.03928 ? gs / 12.92 : Math.pow((gs + 0.055) / 1.055, 2.4);
+    const b = bs <= 0.03928 ? bs / 12.92 : Math.pow((bs + 0.055) / 1.055, 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function getContrastColor(colorStr, threshold = 0.5) {
+    const rgb = parseColor(colorStr);
+    if (!rgb) return null;
+    const luminance = getLuminance(rgb);
+    return luminance > threshold ? '#2C2C2C' : '#FFFFFF';
   }
 
   function getGradientFromColor(colorStr) {
@@ -369,12 +641,18 @@
     enableColorPicker();
     
     // 在预览框显示前台的 Aero 渐变
-    $coverPreview.innerHTML = '';
+    const oldImg = $coverPreview.querySelector('img.cover-preview-img');
+    if (oldImg) oldImg.remove();
+    
     $coverPreview.style.background = getGradientFromColor(color);
     $coverPreview.classList.remove('has-image');
     $coverPreview.classList.add('has-color');
     $coverPreview.style.display = 'block';
     $btnClearCover.style.display = '';
+    
+    // 隐藏裁切控件
+    if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'none';
+    coverImgEl = null;
   }
 
   function selectCoverImage(url) {
@@ -388,9 +666,42 @@
     selectedCoverImage = url;
     $coverUrlInput.value = '';
     
-    // 在预览框显示图片
-    $coverPreview.innerHTML = `<img src="${url}" onerror="this.parentElement.classList.remove('has-image');this.parentElement.style.display='none'">`;
-    $coverPreview.style.background = 'transparent'; // 去除可能的颜色背景
+    // 初始化裁切状态
+    if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'flex';
+    cropPanX = 0;
+    cropPanY = 0;
+    cropScale = 1;
+    if ($coverZoomRange) $coverZoomRange.value = 1;
+    
+    const img = new Image();
+    img.className = 'cover-preview-img';
+    img.crossOrigin = 'anonymous'; // 避免同源画板污染
+    
+    img.onload = () => {
+      const boxRect = $coverPreview.getBoundingClientRect();
+      const boxW = boxRect.width || 420;
+      const boxH = boxRect.height || 280;
+      const scaleW = boxW / img.naturalWidth;
+      const scaleH = boxH / img.naturalHeight;
+      cropScale = Math.max(scaleW, scaleH);
+      if ($coverZoomRange) $coverZoomRange.value = cropScale;
+      updateCoverTransform();
+    };
+    
+    img.onerror = () => {
+      $coverPreview.classList.remove('has-image');
+      $coverPreview.style.display = 'none';
+      if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'none';
+    };
+    
+    img.src = url;
+    coverImgEl = img;
+    
+    const oldImg = $coverPreview.querySelector('img.cover-preview-img');
+    if (oldImg) oldImg.remove();
+    $coverPreview.insertBefore(img, $coverPreview.firstChild);
+    
+    $coverPreview.style.background = 'transparent';
     $coverPreview.style.backgroundColor = '';
     $coverPreview.classList.add('has-image');
     $coverPreview.classList.remove('has-color');
@@ -401,7 +712,10 @@
   function clearCoverPreview() {
     selectedCoverColor = null;
     selectedCoverImage = null;
-    $coverPreview.innerHTML = '';
+    
+    const oldImg = $coverPreview.querySelector('img.cover-preview-img');
+    if (oldImg) oldImg.remove();
+    
     $coverPreview.style.backgroundColor = '';
     $coverPreview.classList.remove('has-image');
     $coverPreview.classList.remove('has-color');
@@ -410,6 +724,8 @@
     $coverUrlInput.value = '';
     $coverUploadInput.value = '';
     $btnClearCover.style.display = 'none';
+    if ($coverZoomCtrl) $coverZoomCtrl.style.display = 'none';
+    coverImgEl = null;
     enableColorPicker();
   }
 
@@ -520,96 +836,109 @@
     localStorage.removeItem('cms_draft');
   }
 
-  // ---- 保存文章 ----
+  // ---- 将拖拽后的图片裁切为 Base64 ----
+  function getCroppedBase64() {
+    if (!selectedCoverImage || !coverImgEl) return selectedCoverImage;
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    // 输出分辨率：1200x800 (保持 3:2 完美比例)
+    canvas.width = 1200;
+    canvas.height = 800;
+    
+    const boxRect = $coverPreview.getBoundingClientRect();
+    if (!boxRect.width || !boxRect.height) return selectedCoverImage;
+    
+    // 渲染比例计算 (Canvas 到 预览框 的映射)
+    const renderRatio = canvas.width / boxRect.width; 
+    
+    ctx.fillStyle = '#f3f4f6'; // 默认底色
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 预览框的物理中心
+    const cx = boxRect.width / 2;
+    const cy = boxRect.height / 2;
+    
+    // 映射到 Canvas 中的坐标
+    const drawX = (cx + cropPanX) * renderRatio;
+    const drawY = (cy + cropPanY) * renderRatio;
+    const drawW = coverImgEl.naturalWidth * cropScale * renderRatio;
+    const drawH = coverImgEl.naturalHeight * cropScale * renderRatio;
+    
+    ctx.translate(drawX, drawY);
+    ctx.drawImage(coverImgEl, -drawW/2, -drawH/2, drawW, drawH);
+    
+    return canvas.toDataURL('image/jpeg', 0.85);
+  }
+
+  // ---- 保存文章到 GitHub ----
   async function saveArticle(asDraft) {
     const title = $titleInput.value.trim();
-    if (!title) {
-      showToast('请输入标题', 'error');
-      return;
-    }
+    if (!title) return showToast('请输入标题', 'error');
 
-    const slug = currentEditSlug || (asDraft ? generateSlug(title) : generateSlug(title));
-    const date = $dateInput.value ? $dateInput.value.replace('T', ' ') + ':00' : beijingNowFull();
-    const updated = beijingNowFull();
-    const excerpt = $excerptInput.value.trim();
-    const cardColor = selectedCoverColor || '';
-    let image = selectedCoverImage || '';
-    const draft = asDraft ? 'true' : 'false';
-    const body = quillEditor.root.innerHTML;
-    const bodyText = quillEditor.getText();
+    // 按钮进入加载状态
+    const $btn = asDraft ? document.getElementById('btn-save-draft') : document.getElementById('btn-publish');
+    const oldText = $btn.textContent;
+    $btn.disabled = true;
+    $btn.textContent = '正在上传...';
 
-    // 如果是草稿且提供了外部图片链接，尝试将其转换为 Base64 保存
-    if (asDraft && image && !image.startsWith('data:image')) {
-      try {
-        const res = await fetch(image, { mode: 'cors' });
-        const blob = await res.blob();
-        image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch (e) {
-        console.warn('转 Base64 失败(可能跨域限制)，由于没有后端辅助，将继续以 URL 形式保存', e);
+    try {
+      const slug = currentEditSlug || (asDraft ? generateSlug(title) : generateSlug(title));
+      const date = $dateInput.value ? $dateInput.value.replace('T', ' ') + ':00' : beijingNowFull();
+      const updated = beijingNowFull();
+      const excerpt = $excerptInput.value.trim();
+      const cardColor = selectedCoverColor || '';
+      let image = selectedCoverImage || '';
+      const draft = asDraft ? 'true' : 'false';
+      const body = quillEditor.root.innerHTML;
+
+      // 封面裁切处理
+      if (image && coverImgEl) {
+        try { image = getCroppedBase64(); } catch (e) { console.warn('裁切失败', e); }
       }
+
+      const frontmatter = [
+        '---',
+        `title: "${title}"`,
+        `date: "${date}"`,
+        `updated: "${updated}"`,
+        `draft: ${draft}`,
+        excerpt ? `excerpt: "${excerpt}"` : '',
+        cardColor ? `cardColor: "${cardColor}"` : '',
+        image ? `image: "${image}"` : '',
+        '---',
+        '',
+        body,
+        ''
+      ].filter(l => l !== '').join('\n');
+
+      // 1. 保存 .md 文件到 GitHub
+      await GITHUB_CMS.commitFile(`content/blog/${slug}.md`, frontmatter, `Update article: ${title}`);
+
+      // 2. 更新文章列表索引
+      const articleEntry = { slug, title, date, updated, draft: asDraft, excerpt, cardColor, image };
+      const existingIdx = articles.findIndex(p => p.slug === slug);
+      if (existingIdx >= 0) articles[existingIdx] = articleEntry;
+      else articles.unshift(articleEntry);
+
+      // 3. 上传更新后的 index.json
+      await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), 'Sync blog index');
+
+      // 模拟更新本地状态
+      localStorage.setItem('cms_index', JSON.stringify(articles));
+      $updatedInput.value = updated.slice(0, 16).replace(' ', 'T');
+      clearLocalStorage();
+      
+      showToast(asDraft ? '草稿已推送到 GitHub' : '文章已正式发布到 GitHub', 'success');
+      showList();
+      renderArticleList();
+    } catch (e) {
+      console.error('发布失败:', e);
+      showToast('发布失败: ' + e.message, 'error');
+    } finally {
+      $btn.disabled = false;
+      $btn.textContent = oldText;
     }
-
-    const frontmatter = [
-      '---',
-      `title: "${title}"`,
-      `date: "${date}"`,
-      `updated: "${updated}"`,
-      `draft: ${draft}`,
-      excerpt ? `excerpt: "${excerpt}"` : '',
-      cardColor ? `cardColor: "${cardColor}"` : '',
-      image ? `image: "${image}"` : '',
-      '---',
-      '',
-      body,
-      ''
-    ].filter(line => line !== '').join('\n');
-
-    // 构造 FormData 提交（GitHub Pages 无后端，用 localStorage 模拟保存提示）
-    // 实际使用时需要通过 GitHub API 或其他后端保存
-    const saveInfo = {
-      slug,
-      frontmatter,
-      savedAt: new Date().toISOString()
-    };
-
-    // 演示：保存到 localStorage
-    const saved = JSON.parse(localStorage.getItem('cms_saved') || '[]');
-    saved.unshift(saveInfo);
-    localStorage.setItem('cms_saved', JSON.stringify(saved.slice(0, 50)));
-
-    // 更新文章列表（模拟）
-    const existingIdx = articles.findIndex(p => p.slug === slug);
-    const articleEntry = {
-      slug,
-      title,
-      date: date,
-      updated,
-      draft: asDraft,
-      excerpt,
-      cardColor,
-      image
-    };
-    if (existingIdx >= 0) {
-      articles[existingIdx] = articleEntry;
-    } else {
-      articles.unshift(articleEntry);
-    }
-
-    // 重建 index.json（模拟）
-    localStorage.setItem('cms_index', JSON.stringify(articles));
-
-    // 保存后更新表单里的"最后修改"字段
-    $updatedInput.value = updated.slice(0, 16).replace(' ', 'T');
-
-    clearLocalStorage();
-    showToast(asDraft ? '草稿已保存' : '文章已发布', 'success');
-    showList();
-    renderArticleList();
   }
 
   // ---- 删除文章 ----
