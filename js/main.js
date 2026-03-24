@@ -303,6 +303,8 @@
   }
 
   // ---- Blog: Load Posts from index.json ----
+  let _allBlogItems = []; // 用于搜索和排序的缓存
+
   async function loadPosts(containerId, limit) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -312,23 +314,25 @@
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
 
-      container.innerHTML = '';
-      // 过滤掉隐藏/草稿文章 (支持 draft: true 或 hidden: true)
+      // 1. 过滤掉隐藏/草稿文章 (支持 draft: true 或 hidden: true)
       const visiblePosts = posts.filter(p => String(p.draft) !== 'true' && String(p.hidden) !== 'true');
-      const list = limit ? visiblePosts.slice(0, limit) : visiblePosts;
+      
+      // 2. 按照 LT (updated) 进行排序，如果没有则按 CT (date)
+      visiblePosts.sort((a, b) => {
+        const timeA = new Date(a.updated || a.date).getTime();
+        const timeB = new Date(b.updated || b.date).getTime();
+        return timeB - timeA;
+      });
 
-      if (list.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <p>暂无文章</p>
-          </div>
-        `;
-        return;
+      // 3. 如果是博客全列表页，初始化搜索
+      if (containerId === 'all-posts') {
+        _allBlogItems = visiblePosts;
+        setupBlogSearch(containerId, limit);
       }
 
-      list.forEach((p) => container.appendChild(createPostCard(p, p.slug)));
-    } catch {
+      renderBlogList(containerId, visiblePosts, limit);
+    } catch (err) {
+      console.error('Load posts error:', err);
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">📝</div>
@@ -336,6 +340,45 @@
         </div>
       `;
     }
+  }
+
+  function renderBlogList(containerId, list, limit, filterQuery = '') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let displayList = list;
+    if (filterQuery) {
+      const q = filterQuery.toLowerCase();
+      displayList = list.filter(p => (p.title || '').toLowerCase().includes(q));
+    }
+
+    if (limit) displayList = displayList.slice(0, limit);
+
+    if (displayList.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <p>${filterQuery ? '未找到相关文章' : '暂无文章'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = '';
+    displayList.forEach((p) => container.appendChild(createPostCard(p, p.slug)));
+  }
+
+  function setupBlogSearch(containerId, limit) {
+    const searchInput = document.getElementById('blog-search-input');
+    if (!searchInput) return;
+
+    // 避免重复绑定
+    if (searchInput.dataset.bound) return;
+    searchInput.dataset.bound = 'true';
+
+    searchInput.addEventListener('input', () => {
+      renderBlogList(containerId, _allBlogItems, limit, searchInput.value);
+    });
   }
 
   // ---- Blog: Load Single Post ----

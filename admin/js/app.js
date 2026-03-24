@@ -203,17 +203,30 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function renderArticleList() {
-    if (articles.length === 0) {
+  function renderArticleList(filterQuery = '') {
+    let filtered = articles;
+    if (filterQuery) {
+      const q = filterQuery.toLowerCase();
+      filtered = articles.filter(post => (post.title || '').toLowerCase().includes(q));
+    }
+
+    // 按照 LT (updated) 进行排序，如果没有则按 CT (date)
+    filtered.sort((a, b) => {
+      const timeA = new Date(a.updated || a.date).getTime();
+      const timeB = new Date(b.updated || b.date).getTime();
+      return timeB - timeA;
+    });
+
+    if (filtered.length === 0) {
       $articleList.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📝</div>
-          <p>暂无文章</p>
+          <div class="empty-state-icon">🔍</div>
+          <p>${filterQuery ? '未找到相关文章' : '暂无文章'}</p>
         </div>`;
       return;
     }
     
-    $articleList.innerHTML = articles.map(post => {
+    $articleList.innerHTML = filtered.map(post => {
       const imgHTML = post.image ? `<img class="post-card-thumb" src="${escHtml(post.image)}" alt="${escHtml(post.title)}" loading="lazy">` : '';
       const timeHTML = post.updated
         ? `<span class="post-time-brief">LT: ${formatDate(post.updated)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`
@@ -414,6 +427,14 @@
 
   // ---- 事件绑定 ----
   function setupEventListeners() {
+    // 搜索过滤
+    const $searchInput = document.getElementById('cms-search-input');
+    if ($searchInput) {
+      $searchInput.addEventListener('input', () => {
+        renderArticleList($searchInput.value);
+      });
+    }
+
     // 新建
     document.getElementById('btn-new-article').addEventListener('click', () => showForm());
 

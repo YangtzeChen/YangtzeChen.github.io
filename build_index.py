@@ -17,7 +17,7 @@ for f in files:
                 meta[k] = v
         meta['slug'] = f[:-3]
         out.append(meta)
-out.sort(key=lambda x: x.get('date', ''), reverse=True)
+out.sort(key=lambda x: x.get('updated') if x.get('updated') else x.get('date', ''), reverse=True)
 with open('content/blog/index.json', 'w', encoding='utf-8') as w:
     json.dump(out, w, indent=2, ensure_ascii=False)
 

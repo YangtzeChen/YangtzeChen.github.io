@@ -138,6 +138,48 @@ body {
   text-align: center;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+/* --- 搜索框 --- */
+.cms-search-wrap {
+  position: relative;
+  width: 240px;
+  transition: width 0.3s var(--ease);
+}
+.cms-search-wrap .field-input {
+  padding-left: 2.2rem;
+  border-radius: 20px;
+  background: var(--bg-alt);
+  border-color: transparent;
+  font-size: 0.85rem;
+}
+.cms-search-wrap .field-input:focus {
+  background: var(--bg);
+  border-color: var(--accent);
+  width: 300px;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+.cms-search-wrap .search-icon {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .section-actions { flex-direction: column; gap: 0.75rem; width: 100%; }
+  .cms-search-wrap { width: 100%; }
+  .cms-search-wrap .field-input:focus { width: 100%; }
+}
+
 /* --- 表单卡片 --- */
 .form-card {
   background: var(--bg);

@@ -373,6 +373,55 @@ a:hover { color: var(--rose); }
   margin-bottom: 3rem;
 }
 
+/* --- Blog Search Bar --- */
+.blog-search-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3.5rem;
+  margin-top: -1rem;
+}
+
+.blog-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+.blog-search-wrap input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: 30px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition: all 0.3s var(--ease);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.blog-search-wrap input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px var(--shadow);
+  transform: translateY(-2px);
+}
+
+.blog-search-wrap .search-icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .blog-search-container { margin-bottom: 2.5rem; }
+  .blog-search-wrap { max-width: 100%; }
+}
+
 /* ============================================================
    Blog Cards — 500px Media-Asset Gallery Style
    ============================================================ */
