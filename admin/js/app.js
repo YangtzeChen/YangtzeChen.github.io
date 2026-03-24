@@ -58,17 +58,30 @@
   let coverImgEl = null;
 
   // ---- 工具：获取北京时间（UTC+8） ----
+  // ---- 工具：获取北京时间（UTC+8） ----
   function beijingNow() {
-    const d = new Date();
-    const offset = 8 * 60 - d.getTimezoneOffset();
-    const local = new Date(d.getTime() + offset * 60000);
-    return local.toISOString().slice(0, 16);
+    // 使用 Intl.DateTimeFormat 确保时区准确
+    const formatter = new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false, timeZone: 'Asia/Shanghai'
+    });
+    const parts = formatter.formatToParts(new Date());
+    const map = {};
+    parts.forEach(p => map[p.type] = p.value);
+    return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
   }
+
   function beijingNowFull() {
-    const d = new Date();
-    const offset = 8 * 60 - d.getTimezoneOffset();
-    const local = new Date(d.getTime() + offset * 60000);
-    return local.toISOString().replace('T', ' ').slice(0, 19);
+    const formatter = new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false, timeZone: 'Asia/Shanghai'
+    });
+    const parts = formatter.formatToParts(new Date());
+    const map = {};
+    parts.forEach(p => map[p.type] = p.value);
+    return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}:${map.second}`;
   }
 
   // ---- 初始化 ----
@@ -417,7 +430,13 @@
     if (navArticleBtn) navArticleBtn.addEventListener('click', goBack);
 
     // 保存并同步
-    document.getElementById('btn-save-sync').addEventListener('click', () => saveArticle());
+    const $btnSync = document.getElementById('btn-save-sync');
+    if ($btnSync) {
+      $btnSync.addEventListener('click', (e) => {
+        e.preventDefault();
+        saveArticle();
+      });
+    }
 
     // 标题计数与实时预览同步
     $titleInput.addEventListener('input', () => {
