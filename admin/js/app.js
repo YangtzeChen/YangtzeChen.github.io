@@ -981,17 +981,32 @@
 
   // ---- 删除文章 ----
   async function deleteArticle(slug) {
-    // 模拟删除
-    articles = articles.filter(p => p.slug !== slug);
-    localStorage.setItem('cms_index', JSON.stringify(articles));
-    
-    // 同时从本地草稿里删除
-    const saved = JSON.parse(localStorage.getItem('cms_saved') || '[]');
-    const newSaved = saved.filter(s => s.slug !== slug);
-    localStorage.setItem('cms_saved', JSON.stringify(newSaved));
-    
-    renderArticleList();
-    showToast('文章已删除', 'success');
+    if (!confirm(`确定要彻底删除文章 [${slug}] 吗？\n此操作将同步删除 GitHub 上的源文件，无法撤销。`)) return;
+
+    try {
+      showToast('正在从 GitHub 删除...', 'info');
+
+      // 1. 从内存和本地存储中移除
+      articles = articles.filter(p => p.slug !== slug);
+      localStorage.setItem('cms_index', JSON.stringify(articles));
+      
+      const saved = JSON.parse(localStorage.getItem('cms_saved') || '[]');
+      const newSaved = saved.filter(s => s.slug !== slug);
+      localStorage.setItem('cms_saved', JSON.stringify(newSaved));
+
+      // 2. 同步更新 GitHub 上的 index.json
+      await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), `Delete article index: ${slug}`);
+
+      // 3. 删除 GitHub 上的 .md 文件
+      await GITHUB_CMS.deleteFile(`content/blog/${slug}.md`, `Delete article file: ${slug}`);
+
+      renderArticleList();
+      showToast('文章及源文件已从 GitHub 彻底删除', 'success');
+    } catch (e) {
+      console.error('删除失败:', e);
+      showToast('同步删除失败: ' + e.message, 'error');
+      // 失败时建议用户手动刷新以对齐状态
+    }
   }
 
   // ---- 工具函数 ----

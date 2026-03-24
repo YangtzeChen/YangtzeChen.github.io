@@ -73,8 +73,50 @@ const GITHUB_CMS = (function() {
     return decodeURIComponent(escape(atob(cleanBase64)));
   }
 
+  /**
+   * Deletes a file from the repository.
+   */
+  async function deleteFile(path, message) {
+    const token = CMS_AUTH.getToken();
+    if (!token) throw new Error('Not authenticated.');
+
+    // 1. Get SHA
+    let sha = null;
+    const resGet = await fetch(`${API_BASE}/${path}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (resGet.ok) {
+      const data = await resGet.json();
+      sha = data.sha;
+    } else {
+      return; // Already gone?
+    }
+
+    // 2. Perform DELETE
+    const body = {
+      message: message || `CMS delete: ${path}`,
+      sha: sha,
+      branch: 'main'
+    };
+
+    const resDel = await fetch(`${API_BASE}/${path}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!resDel.ok) {
+      const errorData = await resDel.json();
+      throw new Error(errorData.message || 'GitHub API delete failed');
+    }
+  }
+
   return {
     commitFile,
-    fetchFile
+    fetchFile,
+    deleteFile
   };
 })();
