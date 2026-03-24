@@ -57,11 +57,20 @@ const GITHUB_CMS = (function() {
   /**
    * Fetches raw content from GitHub
    */
+  /**
+   * Fetches raw content from GitHub (with auth if available)
+   */
   async function fetchFile(path) {
-    const res = await fetch(`${API_BASE}/${path}?ref=main`);
+    const token = CMS_AUTH.getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `token ${token}`;
+
+    const res = await fetch(`${API_BASE}/${path}?ref=main&t=${Date.now()}`, { headers });
     if (!res.ok) return null;
     const data = await res.json();
-    return decodeURIComponent(escape(atob(data.content)));
+    // 关键修复：移除 Base64 中的换行符再解码
+    const cleanBase64 = data.content.replace(/\s/g, '');
+    return decodeURIComponent(escape(atob(cleanBase64)));
   }
 
   return {

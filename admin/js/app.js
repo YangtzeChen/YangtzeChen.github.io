@@ -144,22 +144,39 @@
     });
   }
 
-  // ---- 加载文章列表 ----
+  // ---- 加载文章列表 (优先从 GitHub 获取) ----
   async function loadArticles() {
+    console.log('开始加载文章列表...');
     try {
-      const res = await fetch('/content/blog/index.json');
-      if (!res.ok) throw new Error('not found');
-      articles = await res.json();
-    } catch {
-      articles = [];
-    }
-    
-    // 优先读取本地保存的列表（针对纯前端无后端演示的情况）
-    const localIndex = JSON.parse(localStorage.getItem('cms_index') || 'null');
-    if (localIndex && Array.isArray(localIndex)) {
-      articles = localIndex;
-    } else {
-      localStorage.setItem('cms_index', JSON.stringify(articles));
+      // 尝试从 GitHub API 获取最新的 index.json (增加时间戳防缓存)
+      const content = await GITHUB_CMS.fetchFile('content/blog/index.json');
+      console.log('GitHub API 响应内容长度:', content ? content.length : 0);
+      
+      if (content) {
+        articles = JSON.parse(content);
+        if (!Array.isArray(articles)) articles = [];
+        console.log('解析成功，文章数量:', articles.length);
+        localStorage.setItem('cms_index', JSON.stringify(articles));
+      } else {
+        throw new Error('GitHub 文件不存在或为空');
+      }
+    } catch (e) {
+      console.error('GitHub 获取失败:', e);
+      // 降级：尝试本地 fetch
+      try {
+        const res = await fetch(`/content/blog/index.json?t=${Date.now()}`);
+        if (res.ok) {
+          articles = await res.json();
+          if (!Array.isArray(articles)) articles = [];
+          console.log('本地 Fetch 成功，文章数量:', articles.length);
+        } else {
+          articles = JSON.parse(localStorage.getItem('cms_index') || '[]');
+          console.log('尝试从 LocalStorage 恢复，数量:', articles.length);
+        }
+      } catch (err) {
+        articles = [];
+        console.error('所有加载方式均已失败');
+      }
     }
     renderArticleList();
   }
