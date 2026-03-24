@@ -310,7 +310,7 @@
     if (!container) return;
 
     try {
-      const res = await fetch('/content/blog/index.json');
+      const res = await fetch(`/content/blog/index.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
 
@@ -468,7 +468,7 @@
     grid.className = 'gallery-masonry';
 
     try {
-      const res = await fetch('/content/gallery/index.json');
+      const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
 
@@ -522,7 +522,7 @@
     if (!container) return;
 
     try {
-      const res = await fetch('/content/gallery/index.json');
+      const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
       
