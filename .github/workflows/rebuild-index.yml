@@ -92,7 +92,41 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          
+          # 1. 暂存本地改动
           git add content/blog/index.json content/gallery/index.json
-          git diff --cached --quiet || git commit -m "chore: rebuild content indexes [skip ci]"
-          git pull origin main --rebase --autostash || true
-          git push
+          
+          # 2. 检查是否有实际差异
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # 3. 尝试提交
+          git commit -m "chore: rebuild content indexes [skip ci]"
+          
+          # 4. 稳健的推送逻辑 (带重试与冲突解决)
+          MAX_RETRIES=3
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i to push changes..."
+            if git pull origin main --rebase --autostash; then
+              if git push; then
+                echo "Push successful"
+                exit 0
+              fi
+            else
+              echo "Conflict detected, forcing clean re-base and re-generating indexes..."
+              git rebase --abort || true
+              git fetch origin main
+              git reset --hard origin/main
+              # 重新运行生成脚本 (此处可精简，关键是同步后的状态)
+              python3 content/blog/builder.py
+              python3 content/gallery/builder.py
+              git add content/blog/index.json content/gallery/index.json
+              git commit -m "chore: rebuild content indexes [skip ci] (recovery)" || true
+            fi
+            sleep 2
+          done
+          
+          # 最后一次硬推（如果重后还是失败）
+          git push --force || echo "Final push attempt failed"
