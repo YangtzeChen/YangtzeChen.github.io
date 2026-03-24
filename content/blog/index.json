@@ -1,12 +1,11 @@
 [
   {
-    "slug": "1234-mn4dd1o4",
     "title": "1234",
     "date": "2026-03-25 00:45:00",
     "updated": "2026-03-25 00:45:12",
-    "draft": false,
+    "draft": "false",
     "excerpt": "1234",
     "cardColor": "#E98181",
-    "image": ""
+    "slug": "1234-mn4dd1o4"
   }
 ]
