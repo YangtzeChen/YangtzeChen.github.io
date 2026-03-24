@@ -429,10 +429,10 @@
     const navArticleBtn = document.querySelector('.cms-tabs button[data-tab="articles"]');
     if (navArticleBtn) navArticleBtn.addEventListener('click', goBack);
 
-    // 保存并同步
-    const $btnSync = document.getElementById('btn-save-sync');
-    if ($btnSync) {
-      $btnSync.addEventListener('click', (e) => {
+    // 保存并同步 (顶部单一按键)
+    const $btnPublish = document.getElementById('btn-publish');
+    if ($btnPublish) {
+      $btnPublish.addEventListener('click', (e) => {
         e.preventDefault();
         saveArticle();
       });
@@ -912,11 +912,11 @@
     const title = $titleInput.value.trim();
     if (!title) return showToast('请输入标题', 'error');
 
-    // 按钮进入加载状态
-    const $btn = document.getElementById('btn-save-sync');
+    // 按钮进入加载状态 (统一使用 btn-publish)
+    const $btn = document.getElementById('btn-publish');
     const oldText = $btn.textContent;
     $btn.disabled = true;
-    $btn.textContent = '正在保存并同步...';
+    $btn.textContent = '正在同步到 GitHub...';
 
     const isVisible = $visibleSwitch.checked;
 

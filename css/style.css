@@ -474,12 +474,12 @@ a:hover { color: var(--rose); }
   margin: 0;
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   flex: 1;
-  color: #f5f5f5;
+  color: #f5f5f5 !important;
 }
 
 .post-card-img-wrap:not(:has(.post-card-thumb)) .post-card-title {
   text-shadow: none;
-  color: var(--text);
+  color: #f5f5f5 !important;
 }
 
 .post-card-dates {
@@ -493,11 +493,16 @@ a:hover { color: var(--rose); }
 .post-time-brief {
   font-size: 13px;
   font-weight: 300;
-  opacity: 0.9;
+  opacity: 0.95;
   letter-spacing: 0.02em;
   line-height: 1.2;
   text-transform: uppercase;
-  color: #f5f5f5;
+  color: #f5f5f5 !important;
+}
+
+.post-card-excerpt {
+  color: #f5f5f5 !important;
+  opacity: 0.9;
 }
 
 .post-card-img-wrap:not(:has(.post-card-thumb)) .post-time-brief {
