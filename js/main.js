@@ -313,7 +313,9 @@
       const posts = await res.json();
 
       container.innerHTML = '';
-      const list = limit ? posts.slice(0, limit) : posts;
+      // 过滤掉隐藏/草稿文章 (支持 draft: true 或 hidden: true)
+      const visiblePosts = posts.filter(p => String(p.draft) !== 'true' && String(p.hidden) !== 'true');
+      const list = limit ? visiblePosts.slice(0, limit) : visiblePosts;
 
       if (list.length === 0) {
         container.innerHTML = `

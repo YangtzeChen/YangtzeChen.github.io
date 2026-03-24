@@ -146,21 +146,23 @@
             </div>
 
             <!-- 可见性 -->
-            <div class="field-group">
-              <label class="field-label">文章是否显示
-                <label class="toggle-wrap">
-                  <input type="checkbox" id="post-visible" checked>
-                  <span class="toggle-slider"></span>
-                </label>
-              </label>
-            </div>
-
+            <div class="field-item flex-between">
+          <label class="field-label">公开显示</label>
+          <label class="switch">
+            <input type="checkbox" id="post-visible" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+            
             <!-- 正文 -->
             <div class="field-group">
               <label class="field-label">正文</label>
               <div id="quill-editor"></div>
             </div>
           </form>
+          <div class="form-footer">
+            <button id="btn-save-sync" class="btn btn-primary btn-large w-full">保存并同步到 GitHub</button>
+          </div>
         </div>
       </div>
     </section>

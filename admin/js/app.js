@@ -206,6 +206,9 @@
         ? `<span class="post-time-brief">LT: ${formatDate(post.updated)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`
         : `<span class="post-time-brief">LT: ${formatDate(post.date)}</span><span class="post-time-brief">CT: ${formatDate(post.date)}</span>`;
 
+      // 状态标签
+      const isHidden = String(post.draft) === 'true' || String(post.hidden) === 'true';
+
       let gradientStyle = '';
       let textColorStyle = '';
 
@@ -223,8 +226,8 @@
 
       return `
       <article class="post-card fade-in visible" data-slug="${post.slug}">
-        <span class="article-badge ${post.draft ? 'badge-draft' : 'badge-published'}">
-           ${post.draft ? '草稿' : '已发布'}
+        <span class="article-badge ${isHidden ? 'badge-draft' : 'badge-published'}">
+           ${isHidden ? '已隐藏' : '已显示'}
         </span>
         <div class="cms-card-overlay">
           <button class="btn-icon edit-btn" data-slug="${post.slug}">编辑</button>
@@ -413,11 +416,8 @@
     const navArticleBtn = document.querySelector('.cms-tabs button[data-tab="articles"]');
     if (navArticleBtn) navArticleBtn.addEventListener('click', goBack);
 
-    // 保存草稿
-    document.getElementById('btn-save-draft').addEventListener('click', () => saveArticle(true));
-
-    // 发布
-    document.getElementById('btn-publish').addEventListener('click', () => saveArticle(false));
+    // 保存并同步
+    document.getElementById('btn-save-sync').addEventListener('click', () => saveArticle());
 
     // 标题计数与实时预览同步
     $titleInput.addEventListener('input', () => {
@@ -889,24 +889,26 @@
   }
 
   // ---- 保存文章到 GitHub ----
-  async function saveArticle(asDraft) {
+  async function saveArticle() {
     const title = $titleInput.value.trim();
     if (!title) return showToast('请输入标题', 'error');
 
     // 按钮进入加载状态
-    const $btn = asDraft ? document.getElementById('btn-save-draft') : document.getElementById('btn-publish');
+    const $btn = document.getElementById('btn-save-sync');
     const oldText = $btn.textContent;
     $btn.disabled = true;
-    $btn.textContent = '正在上传...';
+    $btn.textContent = '正在保存并同步...';
+
+    const isVisible = $visibleSwitch.checked;
 
     try {
-      const slug = currentEditSlug || (asDraft ? generateSlug(title) : generateSlug(title));
+      const slug = currentEditSlug || generateSlug(title);
       const date = $dateInput.value ? $dateInput.value.replace('T', ' ') + ':00' : beijingNowFull();
       const updated = beijingNowFull();
       const excerpt = $excerptInput.value.trim();
       const cardColor = selectedCoverColor || '';
       let image = selectedCoverImage || '';
-      const draft = asDraft ? 'true' : 'false';
+      const draft = isVisible ? 'false' : 'true'; // 保持 draft 字段名以兼容旧代码，但语义改变
       const body = quillEditor.root.innerHTML;
 
       // 封面裁切处理
@@ -933,7 +935,7 @@
       await GITHUB_CMS.commitFile(`content/blog/${slug}.md`, frontmatter, `Update article: ${title}`);
 
       // 2. 更新文章列表索引
-      const articleEntry = { slug, title, date, updated, draft: asDraft, excerpt, cardColor, image };
+      const articleEntry = { slug, title, date, updated, draft, excerpt, cardColor, image };
       const existingIdx = articles.findIndex(p => p.slug === slug);
       if (existingIdx >= 0) articles[existingIdx] = articleEntry;
       else articles.unshift(articleEntry);
@@ -945,8 +947,8 @@
       localStorage.setItem('cms_index', JSON.stringify(articles));
       $updatedInput.value = updated.slice(0, 16).replace(' ', 'T');
       clearLocalStorage();
-      
-      showToast(asDraft ? '草稿已推送到 GitHub' : '文章已正式发布到 GitHub', 'success');
+      renderArticleList();
+      showToast('文章内容已同步到 GitHub', 'success');
       showList();
       renderArticleList();
     } catch (e) {
