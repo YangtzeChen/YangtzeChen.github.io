@@ -18,6 +18,21 @@
         <button class="active" data-tab="articles">文章</button>
         <button data-tab="images" disabled>图片（待开发）</button>
       </div>
+      
+      <!-- Theme Picker -->
+      <div class="theme-picker">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme">
+          🌓
+        </button>
+        <div class="theme-dropdown" id="theme-dropdown">
+          <button class="theme-dot active" data-theme="light" style="--dot-color: #FAF9F6;" title="Light"></button>
+          <button class="theme-dot" data-theme="dark" style="--dot-color: #1a1a2e;" title="Dark"></button>
+          <button class="theme-dot" data-theme="pale-red" style="--dot-color: #FFF5F5;" title="Pale Red"></button>
+          <button class="theme-dot" data-theme="water-blue" style="--dot-color: #F0F8FF;" title="Water Blue"></button>
+          <button class="theme-dot" data-theme="grass-green" style="--dot-color: #F5FFF5;" title="Grass Green"></button>
+        </div>
+      </div>
+
       <a href="/" class="cms-back">返回主页</a>
     </div>
   </nav>
@@ -29,12 +44,12 @@
     <section class="section" id="list-view">
       <div class="container">
         <div class="section-head">
-          <h1 class="section-title fade-in">文章管理</h1>
-          <button id="btn-new-article" class="btn-primary fade-in">+ 新建文章</button>
+          <h1 class="section-title">文章管理</h1>
+          <button id="btn-new-article" class="btn-primary">+ 新建文章</button>
         </div>
 
         <!-- 搜索功能 -->
-        <div class="cms-search-container fade-in">
+        <div class="cms-search-container">
           <div class="cms-search-wrap">
             <input type="text" id="cms-search-input" class="field-input" placeholder="按标题搜索...">
             <span class="search-icon">

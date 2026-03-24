@@ -84,8 +84,47 @@
     return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}:${map.second}`;
   }
 
+  // ---- Theme System ----
+  const THEMES = ['light', 'dark', 'pale-red', 'water-blue', 'grass-green'];
+  function setTheme(name) {
+    if (!THEMES.includes(name)) name = 'light';
+    document.documentElement.setAttribute('data-theme', name);
+    localStorage.setItem('blog-theme', name);
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+      dot.classList.toggle('active', dot.dataset.theme === name);
+    });
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem('blog-theme') || 'light';
+    setTheme(saved);
+  }
+
+  function setupThemePicker() {
+    const btn = document.getElementById('theme-toggle-btn');
+    const dropdown = document.getElementById('theme-dropdown');
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setTheme(dot.dataset.theme);
+        dropdown.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', () => dropdown.classList.remove('open'));
+  }
+
   // ---- 初始化 ----
   async function init() {
+    initTheme();
+    setupThemePicker();
     initQuill();
     loadGalleryForCoverPicker();
     setupEventListeners();
