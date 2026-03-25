@@ -843,3 +843,98 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
+/* --- 相册管理 (Gallery Management) --- */
+.gallery-manager-grid {
+  columns: 4 250px;
+  column-gap: 1.5rem;
+  padding: 1rem var(--gap);
+}
+
+.gallery-manager-grid .masonry-item {
+  break-inside: avoid;
+  margin-bottom: 1.5rem;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-alt);
+  box-shadow: 0 4px 15px var(--shadow);
+  transition: transform 0.3s var(--ease);
+}
+
+.gallery-manager-grid .masonry-item:hover {
+  transform: translateY(-4px);
+}
+
+.gallery-manager-grid .masonry-item img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.gallery-manager-grid .masonry-overlay {
+  padding: 1rem;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.gallery-manager-grid .masonry-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.gallery-manager-grid .masonry-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* --- 上传区域 --- */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-alt);
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area.dragover {
+  border-color: var(--accent);
+  background: var(--bg);
+  transform: scale(1.02);
+}
+
+.upload-placeholder .icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.upload-placeholder p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.upload-preview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .gallery-manager-grid {
+    columns: 1;
+  }
+}
+

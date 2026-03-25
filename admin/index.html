@@ -16,7 +16,7 @@
       <a href="/" class="cms-logo">YangtzeChen</a>
       <div class="cms-tabs">
         <button class="active" data-tab="articles">NOSTALGIA</button>
-        <button data-tab="images" disabled>相（待开发）</button>
+        <button data-tab="gallery">相册管理</button>
       </div>
       
       <!-- Theme Picker -->
@@ -50,7 +50,6 @@
             <button id="btn-new-article" class="btn-primary">+ 新建文章</button>
           </div>
         </div>
-
         <!-- 搜索功能 -->
         <div class="cms-search-container">
           <div class="cms-search-wrap">
@@ -65,6 +64,75 @@
         <div class="post-grid" id="article-list"></div>
       </div>
     </section>
+
+    <!-- 相册管理 -->
+    <section class="section" id="gallery-manager-view" style="display:none;">
+      <div class="container">
+        <div class="section-head">
+          <h1 class="section-title">相册管理</h1>
+          <p class="section-subtitle">管理 Gallery 文件夹中的照片</p>
+          <div class="section-actions">
+            <button id="btn-upload-gallery" class="btn-primary">+ 上传照片</button>
+          </div>
+        </div>
+      </div>
+      <div class="container-wide">
+        <div class="gallery-manager-grid" id="gallery-manager-list">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 照片上传弹窗 -->
+    <div id="gallery-upload-modal" class="auth-overlay" style="display:none;">
+      <div class="auth-card fade-in">
+        <h2 class="auth-title">上传照片</h2>
+        <p class="auth-desc">照片将存储在 Gallery 文件夹，可用于全站展示及文章引用。</p>
+        
+        <form id="gallery-upload-form">
+          <div class="field-group">
+            <label class="field-label">照片文件</label>
+            <div class="upload-area" id="gallery-drop-zone">
+              <input type="file" id="gallery-file-input" accept="image/*" style="display:none;">
+              <div class="upload-placeholder">
+                <span class="icon">📷</span>
+                <p>点击或拖拽上传</p>
+              </div>
+              <img id="gallery-preview-img" class="upload-preview" style="display:none;">
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">标题 (小于20字)</label>
+            <input type="text" id="gallery-title-input" class="field-input" maxlength="20" placeholder="为照片起个名字" required>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">描述 (小于200字)</label>
+            <textarea id="gallery-desc-input" class="field-input" maxlength="200" rows="3" placeholder="添加一段背后的故事..."></textarea>
+          </div>
+
+          <div class="auth-actions mt-4">
+            <button type="button" id="btn-cancel-upload" class="btn-secondary">取消</button>
+            <button type="submit" id="btn-confirm-upload" class="btn-primary">开始上传</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 相册选择器弹窗 (用于 Quill 引用) -->
+    <div id="gallery-picker-modal" class="auth-overlay" style="display:none;">
+      <div class="auth-card fade-in" style="max-width: 600px;">
+        <h2 class="auth-title">从相册选择照片</h2>
+        <p class="auth-desc">点击照片以将其插入文章正文。</p>
+        <div class="cover-gallery-grid" id="quill-gallery-grid" style="max-height: 400px; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));">
+          <!-- 动态加载 -->
+        </div>
+        <div class="auth-actions mt-4">
+          <button type="button" id="btn-close-picker" class="btn-secondary">退出</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 文章编辑表单 -->
     <section class="post-article" id="form-view" style="display:none;">

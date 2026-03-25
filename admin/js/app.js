@@ -12,6 +12,7 @@
   let selectedCoverColor = null;
   let selectedCoverImage = null;
   let autoSaveTimer = null;
+  let galleryItems = [];      // 从 content/gallery/index.json 加载的数据
 
   // ---- DOM 元素 ----
   const $articlesPanel = document.getElementById('list-view');
@@ -40,6 +41,24 @@
   const $coverZoomRange = document.getElementById('cover-zoom-range');
   const $btnClearCover = document.getElementById('btn-clear-cover');
   const $btnAutofit = document.getElementById('btn-autofit');
+  
+  // ---- Gallery Manager 元素 ----
+  const $galleryPanel = document.getElementById('gallery-manager-view');
+  const $galleryList = document.getElementById('gallery-manager-list');
+  const $btnShowUpload = document.getElementById('btn-upload-gallery');
+  const $uploadModal = document.getElementById('gallery-upload-modal');
+  const $uploadForm = document.getElementById('gallery-upload-form');
+  const $btnCancelUpload = document.getElementById('btn-cancel-upload');
+  const $galleryDropZone = document.getElementById('gallery-drop-zone');
+  const $galleryFileInput = document.getElementById('gallery-file-input');
+  const $galleryPreviewImg = document.getElementById('gallery-preview-img');
+  const $galleryTitleInput = document.getElementById('gallery-title-input');
+  const $galleryDescInput = document.getElementById('gallery-desc-input');
+  
+  // ---- Quill Picker 元素 ----
+  const $pickerModal = document.getElementById('gallery-picker-modal');
+  const $pickerGrid = document.getElementById('quill-gallery-grid');
+  const $btnClosePicker = document.getElementById('btn-close-picker');
 
   // ---- Auth 元素 ----
   const $authModal = document.getElementById('cms-auth-modal');
@@ -350,8 +369,21 @@
   function showList() {
     $articlesPanel.style.display = 'block';
     $formPanel.style.display = 'none';
+    $galleryPanel.style.display = 'none';
+    document.querySelectorAll('.cms-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelector('.cms-tabs button[data-tab="articles"]').classList.add('active');
     stopAutoSave();
     currentEditSlug = null;
+  }
+
+  function showGallery() {
+    $articlesPanel.style.display = 'none';
+    $formPanel.style.display = 'none';
+    $galleryPanel.style.display = 'block';
+    document.querySelectorAll('.cms-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelector('.cms-tabs button[data-tab="gallery"]').classList.add('active');
+    stopAutoSave();
+    loadGalleryManagement();
   }
 
   function resetForm() {
@@ -440,6 +472,237 @@
     }
   }
 
+  // ---- Gallery Management Functions ----
+  async function loadGalleryManagement() {
+    try {
+      $galleryList.innerHTML = '<div class="spinner"></div>';
+      // 虽然前台有 index.json，但后台为了确保实时性，建议尝试从 GitHub 获取
+      let content = await GITHUB_CMS.fetchFile('content/gallery/index.json');
+      if (!content) {
+        // 降级 fetch
+        const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
+        if(res.ok) content = await res.text();
+      }
+      
+      galleryItems = JSON.parse(content || '[]');
+      renderGalleryManagement();
+    } catch (e) {
+      console.error('Load gallery error:', e);
+      $galleryList.innerHTML = '<p>加载失败</p>';
+    }
+  }
+
+  function renderGalleryManagement() {
+    if (galleryItems.length === 0) {
+      $galleryList.innerHTML = '<div class="empty-state">暂无照片</div>';
+      return;
+    }
+
+    // 将所有图片从 posts 中摊平，每个上传现在视作一个 post
+    const allImages = [];
+    galleryItems.forEach((post, postIdx) => {
+      if (post.images) {
+        post.images.forEach((img, imgIdx) => {
+          allImages.push({ ...img, date: post.date, postIdx, imgIdx });
+        });
+      }
+    });
+
+    // 按日期倒序
+    allImages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    $galleryList.innerHTML = allImages.map(img => `
+      <div class="masonry-item fade-in visible">
+        <div class="cms-card-overlay">
+          <button class="btn-icon danger delete-gallery-btn" data-post-idx="${img.postIdx}" data-img-idx="${img.imgIdx}">删除</button>
+        </div>
+        <img src="${escAttr(img.image)}" alt="${escAttr(img.sub_title)}" loading="lazy">
+        <div class="masonry-overlay">
+          <span class="masonry-title">${escHtml(img.sub_title || '无题')}</span>
+          <span class="masonry-desc">${escHtml(img.description || '') || '<i style="opacity:0.5">暂无描述</i>'}</span>
+        </div>
+      </div>
+    `).join('');
+
+    $galleryList.querySelectorAll('.delete-gallery-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(confirm('确定删除这张照片？')) {
+          deleteGalleryItem(parseInt(btn.dataset.postIdx), parseInt(btn.dataset.imgIdx));
+        }
+      });
+    });
+  }
+
+  async function deleteGalleryItem(postIdx, imgIdx) {
+    try {
+      showToast('正在删除...', 'info');
+      
+      // 注意：这里的 postIdx 和 imgIdx 是渲染时的索引，直接操作 galleryItems
+      // 实际上我们应该根据唯一标识删除，但在这里为了简单，我们重新处理
+      // 这里的逻辑需要小心，因为 allImages 的排序和 galleryItems 本身的顺序不一致
+      // 但是 delete-gallery-btn 携带的是原始 galleryItems 的索引。
+      
+      const post = galleryItems[postIdx];
+      if (!post) return;
+      
+      // 移除图片
+      post.images.splice(imgIdx, 1);
+      
+      // 如果 post 下没图片了，也移除 post
+      if (post.images.length === 0) {
+        galleryItems.splice(postIdx, 1);
+      }
+
+      await GITHUB_CMS.commitRaw(
+        'content/gallery/index.json',
+        JSON.stringify(galleryItems, null, 2),
+        'Gallery: delete image'
+      );
+
+      // 同时删除对应的单个 JSON 文件 (如果存在)
+      const fileName = post.title? `gal-${post.date.replace(/[:-\s]/g, '')}.json` : null; 
+      // 注意：之前的上传 logic 没有保存文件名，我们通过日期匹配或者只是尝试删除
+      // 为了鲁棒，我们在新上传逻辑里把这个 JSON 文件名定好
+      const imagePath = post.images[0].image;
+      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp)$/i, '.json');
+      await GITHUB_CMS.deleteFile(`content/gallery/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
+
+      showToast('删除成功', 'success');
+      loadGalleryManagement();
+    } catch (e) {
+      showToast('删除失败: ' + e.message, 'error');
+    }
+  }
+
+  async function handleGalleryUpload(e) {
+    e.preventDefault();
+    const file = $galleryFileInput.files[0];
+    const title = $galleryTitleInput.value.trim();
+    const desc = $galleryDescInput.value.trim();
+
+    if (!file) return showToast('请选择照片', 'error');
+    if (!title) return showToast('请输入标题', 'error');
+
+    showToast('正在上传...', 'info');
+    const $btn = document.getElementById('btn-confirm-upload');
+    $btn.disabled = true;
+    $btn.textContent = '上传中...';
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const buffer = reader.result;
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        const base64Data = btoa(binary);
+
+        const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+        const fileName = `gal-${hash}.${ext}`;
+        const filePath = `content/gallery/images/${fileName}`;
+
+        // 1. 上传图片文件
+        await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
+
+        // 2. 更新 index.json
+        const newEntry = {
+          title: title, // collection title or post title
+          date: beijingNowFull(),
+          images: [{
+            image: `/${filePath}`,
+            sub_title: title,
+            description: desc
+          }]
+        };
+        
+        galleryItems.unshift(newEntry);
+        await GITHUB_CMS.commitRaw(
+          'content/gallery/index.json',
+          JSON.stringify(galleryItems, null, 2),
+          'Gallery: add new image'
+        );
+
+        // 3. 上传单个元数据文件供 build_index.py 使用
+        const jsonPath = `content/gallery/gal-${hash}.json`;
+        await GITHUB_CMS.commitRaw(jsonPath, JSON.stringify(newEntry, null, 2), `Gallery: upload metadata ${fileName}`);
+
+        showToast('上传成功', 'success');
+        hideUploadModal();
+        loadGalleryManagement();
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (e) {
+      showToast('上传失败: ' + e.message, 'error');
+    } finally {
+      $btn.disabled = false;
+      $btn.textContent = '开始上传';
+    }
+  }
+
+  function showUploadModal() {
+    $uploadModal.style.display = 'flex';
+    $uploadForm.reset();
+    $galleryPreviewImg.style.display = 'none';
+    $galleryDropZone.querySelector('.upload-placeholder').style.display = 'block';
+    setTimeout(() => $uploadModal.querySelector('.auth-card').classList.add('visible'), 50);
+  }
+
+  function hideUploadModal() {
+    $uploadModal.style.display = 'none';
+    $uploadModal.querySelector('.auth-card').classList.remove('visible');
+  }
+
+  // ---- Quill Gallery Picker ----
+  async function showGalleryPicker() {
+    try {
+      $pickerModal.style.display = 'flex';
+      $pickerGrid.innerHTML = '<div class="spinner"></div>';
+      setTimeout(() => $pickerModal.querySelector('.auth-card').classList.add('visible'), 50);
+
+      const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      
+      let images = [];
+      data.forEach(post => {
+        if (post.images) {
+          post.images.forEach(img => {
+            images.push({ url: img.image, title: img.sub_title || post.title || '' });
+          });
+        }
+      });
+
+      if (images.length === 0) {
+        $pickerGrid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:2rem;">暂无照片</p>';
+        return;
+      }
+
+      $pickerGrid.innerHTML = images.map(img => `
+        <div class="cover-gallery-item" data-url="${escAttr(img.url)}">
+          <img src="${escAttr(img.url)}" alt="${escAttr(img.title)}" title="${escAttr(img.title)}" loading="lazy">
+        </div>
+      `).join('');
+
+      $pickerGrid.querySelectorAll('.cover-gallery-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const url = item.dataset.url;
+          const range = quillEditor.getSelection();
+          quillEditor.insertEmbed(range ? range.index : 0, 'image', url);
+          hideGalleryPicker();
+        });
+      });
+    } catch {
+      $pickerGrid.innerHTML = '<p>加载失败</p>';
+    }
+  }
+
+  function hideGalleryPicker() {
+    $pickerModal.style.display = 'none';
+    $pickerModal.querySelector('.auth-card').classList.remove('visible');
+  }
+
   // ---- 解析 YAML frontmatter ----
   function parseFrontmatter(text) {
     const match = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
@@ -496,8 +759,13 @@
       showList();
     };
     document.getElementById('back-to-list').addEventListener('click', goBack);
-    const navArticleBtn = document.querySelector('.cms-tabs button[data-tab="articles"]');
-    if (navArticleBtn) navArticleBtn.addEventListener('click', goBack);
+    document.querySelectorAll('.cms-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        if (tab === 'articles') showList();
+        if (tab === 'gallery') showGallery();
+      });
+    });
 
     // 保存并同步 (顶部单一按键)
     const $btnPublish = document.getElementById('btn-publish');
@@ -655,6 +923,52 @@
     window.addEventListener('touchmove', onDragMove, { passive: false });
     window.addEventListener('mouseup', onDragEnd);
     window.addEventListener('touchend', onDragEnd);
+
+    // ---- Gallery Manager Events ----
+    if ($btnShowUpload) $btnShowUpload.addEventListener('click', showUploadModal);
+    if ($btnCancelUpload) $btnCancelUpload.addEventListener('click', hideUploadModal);
+    if ($uploadForm) $uploadForm.addEventListener('submit', handleGalleryUpload);
+
+    if ($galleryDropZone) {
+      $galleryDropZone.addEventListener('click', () => $galleryFileInput.click());
+      
+      $galleryDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        $galleryDropZone.classList.add('dragover');
+      });
+      ['dragleave', 'dragend'].forEach(type => {
+        $galleryDropZone.addEventListener(type, () => $galleryDropZone.classList.remove('dragover'));
+      });
+      $galleryDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        $galleryDropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          $galleryFileInput.files = e.dataTransfer.files;
+          handleGalleryFilePreview($galleryFileInput.files[0]);
+        }
+      });
+    }
+
+    if ($galleryFileInput) {
+      $galleryFileInput.addEventListener('change', () => {
+        if ($galleryFileInput.files.length) {
+          handleGalleryFilePreview($galleryFileInput.files[0]);
+        }
+      });
+    }
+
+    if ($btnClosePicker) $btnClosePicker.addEventListener('click', hideGalleryPicker);
+
+    function handleGalleryFilePreview(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        $galleryPreviewImg.src = e.target.result;
+        $galleryPreviewImg.style.display = 'block';
+        $galleryDropZone.querySelector('.upload-placeholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   function updateCoverTransform() {
@@ -909,10 +1223,7 @@
           handlers: {
             image_local: handleImageLocal,
             image_url: handleImageURL,
-            gallery: () => {
-              showToast('相册引用功能待开发', 'info');
-              // 后续在这里弹出二级窗口选择 content/gallery 下的图片
-            }
+            gallery: showGalleryPicker
           }
         },
         clipboard: {

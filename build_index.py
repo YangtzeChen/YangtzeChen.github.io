@@ -15,7 +15,7 @@ for f in files:
                 k = k.strip()
                 v = v.strip().strip('"').strip("'")
                 meta[k] = v
-        meta['slug'] = f[:-3]
+        meta['slug'] = os.path.splitext(f)[0]
         out.append(meta)
 out.sort(key=lambda x: x.get('updated') if x.get('updated') else x.get('date', ''), reverse=True)
 with open('content/blog/index.json', 'w', encoding='utf-8') as w:
@@ -25,7 +25,7 @@ with open('content/blog/index.json', 'w', encoding='utf-8') as w:
 out_gal = []
 for root, dirs, files in os.walk('content/gallery'):
     for f in files:
-        if f.endswith('.json'):
+        if f.endswith('.json') and f != 'index.json':
             with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
                 data = json.load(file)
             if data:
