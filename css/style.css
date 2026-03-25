@@ -156,14 +156,14 @@ a:hover { color: var(--rose); }
   padding: 4rem 0 2rem;
 }
 .home-logo {
-  height: 400px;
+  height: 600px;
   width: auto;
   filter: invert(var(--logo-invert));
   transition: filter 0.4s var(--ease);
   object-fit: contain;
 }
 @media (max-width: 640px) {
-  .home-logo { height: 240px; }
+  .home-logo { height: 360px; }
 }
 
 /* ============================================================
