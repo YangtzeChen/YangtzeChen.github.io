@@ -23,6 +23,7 @@
   --white:       #FFFFFF;
   --card-bg:     #FFFFFF;
   --nav-bg:      rgba(250, 249, 246, 0.85);
+  --logo-invert: 0;
 
   /* Typography */
   --font-heading: 'Noto Serif JP', 'Georgia', serif;
@@ -53,6 +54,7 @@
   --white:       #22223A;
   --card-bg:     #22223A;
   --nav-bg:      rgba(26, 26, 46, 0.92);
+  --logo-invert: 1;
 }
 
 /* --- Pale Red Theme (莫兰迪红) --- */
@@ -70,6 +72,7 @@
   --white:       #FFFFFF;
   --card-bg:     #FFFFFF;
   --nav-bg:      rgba(255, 245, 245, 0.88);
+  --logo-invert: 0;
 }
 
 /* --- Water Blue Theme (水蓝) --- */
@@ -87,6 +90,7 @@
   --white:       #FFFFFF;
   --card-bg:     #FFFFFF;
   --nav-bg:      rgba(240, 248, 255, 0.88);
+  --logo-invert: 0;
 }
 
 /* --- Grass Green Theme (草绿) --- */
@@ -104,6 +108,7 @@
   --white:       #FFFFFF;
   --card-bg:     #FFFFFF;
   --nav-bg:      rgba(245, 255, 245, 0.88);
+  --logo-invert: 0;
 }
 
 /* --- Reset --- */
@@ -144,6 +149,21 @@ a:hover { color: var(--rose); }
 .fade-in.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* --- Home Logo --- */
+.home-logo-section {
+  padding: 4rem 0 2rem;
+}
+.home-logo {
+  height: 400px;
+  width: auto;
+  filter: invert(var(--logo-invert));
+  transition: filter 0.4s var(--ease);
+  object-fit: contain;
+}
+@media (max-width: 640px) {
+  .home-logo { height: 240px; }
 }
 
 /* ============================================================
