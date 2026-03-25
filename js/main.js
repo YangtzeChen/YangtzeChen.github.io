@@ -5,6 +5,38 @@
 (function () {
   'use strict';
 
+  // ---- Cache-Busting: Version Check ----
+  async function checkUpdate() {
+    try {
+      // Use timestamp to bypass version.json cache
+      const res = await fetch(`/content/version.json?t=${Date.now()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const newVersion = String(data.version);
+      const oldVersion = localStorage.getItem('site-version');
+
+      if (oldVersion && oldVersion !== newVersion) {
+        // Update local storage first to prevent infinite loop if reload fails to get new assets immediately
+        localStorage.setItem('site-version', newVersion);
+        console.log('New content available, reloading...');
+        window.location.reload();
+      } else if (!oldVersion) {
+        localStorage.setItem('site-version', newVersion);
+      }
+    } catch (err) {
+      console.warn('Check update failed:', err);
+    }
+  }
+
+  // Initial check
+  checkUpdate();
+  // Check when tab becomes visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkUpdate();
+    }
+  });
+
   // ---- Theme System ----
   const THEMES = ['light', 'dark', 'pale-red', 'water-blue', 'grass-green'];
   const THEME_LABELS = {

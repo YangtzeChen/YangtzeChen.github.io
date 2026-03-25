@@ -88,13 +88,17 @@ jobs:
           EOF
           python3 builder.py
 
+      - name: Generate build version
+        run: |
+          python3 -c "import json, time; with open('content/version.json', 'w') as f: json.dump({'version': int(time.time() * 1000)}, f)"
+
       - name: Commit updated indexes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
           # 1. 暂存本地改动
-          git add content/blog/index.json content/gallery/index.json
+          git add content/blog/index.json content/gallery/index.json content/version.json
           
           # 2. 检查是否有实际差异
           if git diff --cached --quiet; then
@@ -122,7 +126,7 @@ jobs:
               # 重新运行生成脚本 (此处可精简，关键是同步后的状态)
               python3 content/blog/builder.py
               python3 content/gallery/builder.py
-              git add content/blog/index.json content/gallery/index.json
+              git add content/blog/index.json content/gallery/index.json content/version.json
               git commit -m "chore: rebuild content indexes [skip ci] (recovery)" || true
             fi
             sleep 2

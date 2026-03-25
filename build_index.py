@@ -1,4 +1,4 @@
-import os, json, re
+import os, json, re, time
 
 # Blog
 files = [f for f in os.listdir('content/blog') if f.endswith('.md')]
@@ -37,3 +37,10 @@ for root, dirs, files in os.walk('content/gallery'):
 out_gal.sort(key=lambda x: x.get('date', ''), reverse=True)
 with open('content/gallery/index.json', 'w', encoding='utf-8') as w:
     json.dump(out_gal, w, indent=2, ensure_ascii=False)
+
+# Build Version
+version_data = {
+    "version": int(time.time() * 1000)
+}
+with open('content/version.json', 'w', encoding='utf-8') as w:
+    json.dump(version_data, w, indent=2)
