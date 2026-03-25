@@ -140,6 +140,21 @@
     return { meta, body: match[2] };
   }
 
+  // ---- Global Image Error Handler (IMAGE LOST) ----
+  document.addEventListener('error', function (e) {
+    if (e.target.tagName.toLowerCase() === 'img') {
+      const img = e.target;
+      if (img.classList.contains('img-lost')) return; // Avoid infinite loop
+      
+      // If it's a post card thumb, we let the existing card error handler take care of it
+      if (img.classList.contains('post-card-thumb')) return;
+
+      img.classList.add('img-lost');
+      // Set to transparent pixel to keep layout but show ::after content
+      img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==';
+    }
+  }, true);
+
   // ---- Blog: Create a Post Card ----
   // Fixed gradient colors for posts without cover image (deterministic by slug)
   const FALLBACK_GRADIENTS = [

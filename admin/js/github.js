@@ -114,9 +114,53 @@ const GITHUB_CMS = (function() {
     }
   }
 
+  /**
+   * Commits binary content (using Base64 directly)
+   */
+  async function commitRaw(path, base64Content, message) {
+    const token = CMS_AUTH.getToken();
+    if (!token) throw new Error('Not authenticated.');
+
+    // 1. Get SHA if exists
+    let sha = null;
+    try {
+      const res = await fetch(`${API_BASE}/${path}`, {
+        headers: { 'Authorization': `token ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        sha = data.sha;
+      }
+    } catch (e) {}
+
+    // 2. Perform PUT
+    const body = {
+      message: message || `Upload binary: ${path}`,
+      content: base64Content,
+      branch: 'main'
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(`${API_BASE}/${path}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Upload failed');
+    }
+    return await res.json();
+  }
+
   return {
     commitFile,
     fetchFile,
-    deleteFile
+    deleteFile,
+    commitRaw
   };
 })();

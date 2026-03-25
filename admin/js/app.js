@@ -881,16 +881,66 @@
       theme: 'snow',
       placeholder: '开始写作...',
       modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-          ['blockquote', 'code-block'],
-          ['link', 'image'],
-          ['clean']
-        ]
+        toolbar: {
+          container: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            ['link', 'image'],
+            ['clean']
+          ],
+          handlers: {
+            image: handleQuillImage
+          }
+        }
       }
     });
+  }
+
+  function handleQuillImage() {
+    const choice = confirm('是否上传本地图片？\n[确定]：上传本地图片至 GitHub\n[取消]：通过图片 URL 直接引用');
+    
+    if (choice) {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      input.setAttribute('accept', 'image/*');
+      input.click();
+
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            showToast('正在上传图片至 GitHub...', 'info');
+            const base64Full = reader.result;
+            const base64Data = base64Full.split(',')[1];
+            const ext = file.name.split('.').pop() || 'png';
+            const fileName = `img-${Date.now()}.${ext}`;
+            const path = `content/blog/blog_image/${fileName}`;
+
+            await GITHUB_CMS.commitRaw(path, base64Data, `Upload blog image: ${fileName}`);
+            
+            const range = quillEditor.getSelection();
+            const url = `/${path}`;
+            quillEditor.insertEmbed(range.index || 0, 'image', url);
+            showToast('图片上传成功', 'success');
+          } catch (e) {
+            console.error('图片上传失败', e);
+            showToast('图片上传失败: ' + e.message, 'error');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+    } else {
+      const url = prompt('请输入图片 URL:');
+      if (url && url.trim()) {
+        const range = quillEditor.getSelection();
+        quillEditor.insertEmbed(range.index || 0, 'image', url.trim());
+      }
+    }
   }
 
   // ---- 自动保存草稿 ----

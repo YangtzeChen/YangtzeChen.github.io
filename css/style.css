@@ -1168,3 +1168,29 @@ a:hover { color: var(--rose); }
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40% { transform: scale(1); opacity: 1; }
 }
+
+/* --- Image Lost Placeholder --- */
+.img-lost {
+  background: var(--bg-alt) !important;
+  border: 1.5px dashed var(--border) !important;
+  border-radius: 8px !important;
+  position: relative !important;
+  display: block !important;
+  min-height: 120px !important;
+  width: 100% !important;
+  object-fit: contain !important;
+}
+
+.img-lost::after {
+  content: 'IMAGE LOST';
+  position: absolute;
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+}
