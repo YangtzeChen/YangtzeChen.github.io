@@ -157,10 +157,31 @@ const GITHUB_CMS = (function() {
     return await res.json();
   }
 
+  /**
+   * Lists files in a directory
+   */
+  async function listDir(path) {
+    const token = CMS_AUTH.getToken();
+    if (!token) throw new Error('Not authenticated.');
+
+    const res = await fetch(`${API_BASE}/${path}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) return [];
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'List directory failed');
+    }
+
+    return await res.json();
+  }
+
   return {
     commitFile,
     fetchFile,
     deleteFile,
-    commitRaw
+    commitRaw,
+    listDir
   };
 })();

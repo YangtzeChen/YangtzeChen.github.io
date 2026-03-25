@@ -477,6 +477,16 @@
     // 新建
     document.getElementById('btn-new-article').addEventListener('click', () => showForm());
 
+    // 图片回收
+    const $btnRecycle = document.getElementById('btn-recycle-images');
+    if ($btnRecycle) {
+      $btnRecycle.addEventListener('click', () => {
+        if (confirm('是否扫描并清理 blog_image 中未使用的图片？\n此过程会分析所有文章正文。')) {
+          recycleBlogImages();
+        }
+      });
+    }
+
     // 导航栏文章 Tab / 取消（返回列表）
     const goBack = e => {
       e.preventDefault();
@@ -877,6 +887,10 @@
 
   // ---- Quill 初始化 ----
   function initQuill() {
+    // 注册自定义图标
+    const icons = Quill.import('ui/icons');
+    icons['gallery'] = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+
     quillEditor = new Quill('#quill-editor', {
       theme: 'snow',
       placeholder: '开始写作...',
@@ -887,11 +901,15 @@
             ['bold', 'italic', 'underline', 'strike'],
             [{ 'list': 'ordered' }, { 'list': 'bullet' }],
             ['blockquote', 'code-block'],
-            ['link', 'image'],
+            ['link', 'image', 'gallery'], // Add gallery here
             ['clean']
           ],
           handlers: {
-            image: handleQuillImage
+            image: handleQuillImage,
+            gallery: () => {
+              showToast('相册引用功能待开发', 'info');
+              // 后续在这里弹出二级窗口选择 content/gallery 下的图片
+            }
           }
         },
         clipboard: {
@@ -940,7 +958,10 @@
         const base64Full = reader.result;
         const base64Data = base64Full.split(',')[1];
         const ext = file.name ? file.name.split('.').pop() : 'png';
-        const fileName = `img-${Date.now()}.${ext || 'png'}`;
+        
+        // 使用哈希值作为文件名实现去重
+        const hash = await computeImageHash(base64Data);
+        const fileName = `img-${hash}.${ext || 'png'}`;
         const path = `content/blog/blog_image/${fileName}`;
 
         await GITHUB_CMS.commitRaw(path, base64Data, `Upload blog image: ${fileName}`);
@@ -1096,7 +1117,8 @@
         $btn.textContent = `同步图片中 (0/${base64Matches.length})...`;
         for (let i = 0; i < base64Matches.length; i++) {
           const m = base64Matches[i];
-          const fileName = `img-${Date.now()}-${i}.${m.ext}`;
+          const hash = await computeImageHash(m.data);
+          const fileName = `img-${hash}.${m.ext}`;
           const path = `content/blog/blog_image/${fileName}`;
           
           try {
@@ -1161,6 +1183,72 @@
     }
   }
 
+  /**
+   * 图片回收逻辑
+   * 扫描所有文章 body，与 blog_image 文件夹对比，删除无引用文件。
+   */
+  async function recycleBlogImages() {
+    try {
+      showToast('正在初始化扫描...', 'info');
+      // 1. 获取所有文章 slug
+      const slugs = articles.map(a => a.slug);
+      const usedImages = new Set();
+      
+      // 2. 遍历拉取每个文章内容
+      showToast(`正在扫描正文 (共 ${slugs.length} 篇)...`, 'info');
+      
+      for (const slug of slugs) {
+        try {
+          const res = await fetch(`/content/blog/${slug}.md?t=${Date.now()}`);
+          if (!res.ok) continue;
+          const text = await res.text();
+          // 匹配 /content/blog/blog_image/ 路径
+          const regex = /\/content\/blog\/blog_image\/img-[a-zA-Z0-9]+\.[a-zA-Z0-9]+/g;
+          let m;
+          while ((m = regex.exec(text)) !== null) {
+            usedImages.add(m[0].split('/').pop()); // 只存文件名
+          }
+        } catch (e) {
+          console.warn(`Scan failed for ${slug}`, e);
+        }
+      }
+
+      // 3. 获取 blog_image 文件夹所有文件
+      showToast('拉取仓库文件列表...', 'info');
+      const files = await GITHUB_CMS.listDir('content/blog/blog_image');
+      const repoFiles = files.filter(f => f.type === 'file' && f.name !== '.gitkeep');
+      
+      // 4. 计算孤儿文件
+      const orphans = repoFiles.filter(f => !usedImages.has(f.name));
+      
+      if (orphans.length === 0) {
+        showToast('未发现冗余图片，仓库很干净', 'success');
+        return;
+      }
+
+      if (!confirm(`扫描完成：\n正引用图片：${usedImages.size} 张\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
+        return;
+      }
+
+      // 5. 执行删除
+      let successCount = 0;
+      for (const file of orphans) {
+        try {
+          await GITHUB_CMS.deleteFile(file.path, `Recycle unused image: ${file.name}`);
+          successCount++;
+          showToast(`已清理 (${successCount}/${orphans.length})...`, 'info');
+        } catch (e) {
+          console.error(`Recycle failed for ${file.name}`, e);
+        }
+      }
+
+      showToast(`清理完成！共删除 ${successCount} 张过期图片`, 'success');
+    } catch (e) {
+      console.error('图片回收失败', e);
+      showToast('回收失败: ' + e.message, 'error');
+    }
+  }
+
   // ---- 删除文章 ----
   async function deleteArticle(slug) {
     if (!confirm(`确定要彻底删除文章 [${slug}] 吗？\n此操作将同步删除 GitHub 上的源文件，无法撤销。`)) return;
@@ -1200,6 +1288,89 @@
 
   function escAttr(str) {
     return str.replace(/"/g, '&quot;');
+  }
+
+  // 计算图片内容的哈希值以去重 (SHA-256 前 16 位)
+  async function computeImageHash(base64Data) {
+    try {
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    } catch (e) {
+      console.warn('Hash computation failed, fallback to timestamp', e);
+      return Date.now().toString();
+    }
+  }
+
+  /**
+   * 图片回收逻辑
+   * 扫描所有文章 body，与 blog_image 文件夹对比，删除无引用文件。
+   */
+  async function recycleBlogImages() {
+    try {
+      showToast('正在初始化扫描...', 'info');
+      // 1. 获取所有文章 slug
+      const slugs = articles.map(a => a.slug);
+      const usedImages = new Set();
+      
+      // 2. 遍历拉取每个文章内容
+      showToast(`正在扫描正文 (共 ${slugs.length} 篇)...`, 'info');
+      
+      for (const slug of slugs) {
+        try {
+          const res = await fetch(`/content/blog/${slug}.md?t=${Date.now()}`);
+          if (!res.ok) continue;
+          const text = await res.text();
+          // 匹配 /content/blog/blog_image/ 路径
+          const regex = /\/content\/blog\/blog_image\/img-[a-zA-Z0-9]+\.[a-zA-Z0-9]+/g;
+          let m;
+          while ((m = regex.exec(text)) !== null) {
+            usedImages.add(m[0].split('/').pop()); // 只存文件名
+          }
+        } catch (e) {
+          console.warn(`Scan failed for ${slug}`, e);
+        }
+      }
+
+      // 3. 获取 blog_image 文件夹所有文件
+      showToast('拉取仓库文件列表...', 'info');
+      const files = await GITHUB_CMS.listDir('content/blog/blog_image');
+      const repoFiles = files.filter(f => f.type === 'file' && f.name !== '.gitkeep');
+      
+      // 4. 计算孤儿文件
+      const orphans = repoFiles.filter(f => !usedImages.has(f.name));
+      
+      if (orphans.length === 0) {
+        showToast('未发现冗余图片，仓库很干净', 'success');
+        return;
+      }
+
+      if (!confirm(`扫描完成：\n正引用图片：${usedImages.size} 张\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
+        return;
+      }
+
+      // 5. 执行删除
+      let successCount = 0;
+      for (const file of orphans) {
+        try {
+          await GITHUB_CMS.deleteFile(file.path, `Recycle unused image: ${file.name}`);
+          successCount++;
+          showToast(`已清理 (${successCount}/${orphans.length})...`, 'info');
+        } catch (e) {
+          console.error(`Recycle failed for ${file.name}`, e);
+        }
+      }
+
+      showToast(`清理完成！共删除 ${successCount} 张过期图片`, 'success');
+    } catch (e) {
+      console.error('图片回收失败', e);
+      showToast('回收失败: ' + e.message, 'error');
+    }
   }
 
   function showToast(msg, type = 'success') {
