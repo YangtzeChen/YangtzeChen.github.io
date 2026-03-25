@@ -371,7 +371,8 @@
     $formPanel.style.display = 'none';
     $galleryPanel.style.display = 'none';
     document.querySelectorAll('.cms-tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelector('.cms-tabs button[data-tab="articles"]').classList.add('active');
+    const tabArticles = document.getElementById('tab-articles');
+    if (tabArticles) tabArticles.classList.add('active');
     stopAutoSave();
     currentEditSlug = null;
   }
@@ -381,7 +382,8 @@
     $formPanel.style.display = 'none';
     $galleryPanel.style.display = 'block';
     document.querySelectorAll('.cms-tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelector('.cms-tabs button[data-tab="gallery"]').classList.add('active');
+    const tabGallery = document.getElementById('tab-gallery');
+    if (tabGallery) tabGallery.classList.add('active');
     stopAutoSave();
     loadGalleryManagement();
   }
@@ -752,20 +754,18 @@
 
     // 导航栏文章 Tab / 取消（返回列表）
     const goBack = e => {
-      e.preventDefault();
-      if (currentEditSlug || $titleInput.value || quillEditor.getText().trim().length > 0) {
+      if (e) e.preventDefault();
+      const hasContent = currentEditSlug || ( $titleInput && $titleInput.value ) || ( quillEditor && quillEditor.getText().trim().length > 0 );
+      if (hasContent) {
         if (!confirm('确定取消？未保存的内容将丢失。')) return;
       }
       showList();
     };
     document.getElementById('back-to-list').addEventListener('click', goBack);
-    document.querySelectorAll('.cms-tabs button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        if (tab === 'articles') showList();
-        if (tab === 'gallery') showGallery();
-      });
-    });
+    const $tabArticles = document.getElementById('tab-articles');
+    const $tabGallery = document.getElementById('tab-gallery');
+    if ($tabArticles) $tabArticles.addEventListener('click', (e) => { e.preventDefault(); showList(); });
+    if ($tabGallery) $tabGallery.addEventListener('click', (e) => { e.preventDefault(); showGallery(); });
 
     // 保存并同步 (顶部单一按键)
     const $btnPublish = document.getElementById('btn-publish');
