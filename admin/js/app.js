@@ -1058,11 +1058,11 @@
       const newSaved = saved.filter(s => s.slug !== slug);
       localStorage.setItem('cms_saved', JSON.stringify(newSaved));
 
+      // 1. 删除 GitHub 上的 .md 文件
+      await GITHUB_CMS.deleteFile(`content/blog/${slug}.md`, `Delete article file: ${slug}`);
+
       // 2. 同步更新 GitHub 上的 index.json
       await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), `Delete article index: ${slug}`);
-
-      // 3. 删除 GitHub 上的 .md 文件
-      await GITHUB_CMS.deleteFile(`content/blog/${slug}.md`, `Delete article file: ${slug}`);
 
       renderArticleList();
       showToast('文章及源文件已从 GitHub 彻底删除', 'success');
