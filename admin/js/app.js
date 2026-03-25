@@ -893,9 +893,68 @@
           handlers: {
             image: handleQuillImage
           }
+        },
+        clipboard: {
+          matchers: [
+            ['img', (node, delta) => {
+              // 这里的 delta 包含图片地址，如果是 base64，我们后续在 save 时统一处理或重写此逻辑
+              // 为了简单且不破坏用户体验，我们允许粘贴，但在 save 时强制转换并上传
+              return delta;
+            }]
+          ]
         }
       }
     });
+
+    // 监听粘贴事件，尝试立即处理图片
+    quillEditor.root.addEventListener('paste', async (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          uploadImageFile(file);
+        }
+      }
+    });
+
+    // 监听拖拽事件
+    quillEditor.root.addEventListener('drop', async (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file.type.startsWith('image/')) {
+          uploadImageFile(file);
+        }
+      }
+    });
+  }
+
+  // 抽出通用的图片上传逻辑
+  async function uploadImageFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        showToast('正在上传图片...', 'info');
+        const base64Full = reader.result;
+        const base64Data = base64Full.split(',')[1];
+        const ext = file.name ? file.name.split('.').pop() : 'png';
+        const fileName = `img-${Date.now()}.${ext || 'png'}`;
+        const path = `content/blog/blog_image/${fileName}`;
+
+        await GITHUB_CMS.commitRaw(path, base64Data, `Upload blog image: ${fileName}`);
+        
+        const range = quillEditor.getSelection();
+        const url = `/${path}`;
+        quillEditor.insertEmbed(range ? range.index : 0, 'image', url);
+        showToast('图片上传成功', 'success');
+      } catch (e) {
+        console.error('图片上传失败', e);
+        showToast('图片上传失败: ' + e.message, 'error');
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleQuillImage() {
@@ -909,30 +968,7 @@
 
       input.onchange = async () => {
         const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async () => {
-          try {
-            showToast('正在上传图片至 GitHub...', 'info');
-            const base64Full = reader.result;
-            const base64Data = base64Full.split(',')[1];
-            const ext = file.name.split('.').pop() || 'png';
-            const fileName = `img-${Date.now()}.${ext}`;
-            const path = `content/blog/blog_image/${fileName}`;
-
-            await GITHUB_CMS.commitRaw(path, base64Data, `Upload blog image: ${fileName}`);
-            
-            const range = quillEditor.getSelection();
-            const url = `/${path}`;
-            quillEditor.insertEmbed(range.index || 0, 'image', url);
-            showToast('图片上传成功', 'success');
-          } catch (e) {
-            console.error('图片上传失败', e);
-            showToast('图片上传失败: ' + e.message, 'error');
-          }
-        };
-        reader.readAsDataURL(file);
+        uploadImageFile(file);
       };
     } else {
       const url = prompt('请输入图片 URL:');
@@ -1042,7 +1078,39 @@
       const cardColor = selectedCoverColor || '';
       let image = selectedCoverImage || '';
       const draft = isVisible ? 'false' : 'true'; // 保持 draft 字段名以兼容旧代码，但语义改变
-      const body = quillEditor.root.innerHTML;
+      let body = quillEditor.root.innerHTML;
+ 
+      // --- 关键：扫描并自动转换正文中的 Base64 图片 ---
+      const base64Regex = /<img src="data:image\/(png|jpeg|webp|gif|jpg);base64,([^"]+)"/g;
+      let match;
+      const base64Matches = [];
+      while ((match = base64Regex.exec(body)) !== null) {
+        base64Matches.push({
+          full: match[0],
+          ext: match[1],
+          data: match[2]
+        });
+      }
+ 
+      if (base64Matches.length > 0) {
+        $btn.textContent = `同步图片中 (0/${base64Matches.length})...`;
+        for (let i = 0; i < base64Matches.length; i++) {
+          const m = base64Matches[i];
+          const fileName = `img-${Date.now()}-${i}.${m.ext}`;
+          const path = `content/blog/blog_image/${fileName}`;
+          
+          try {
+            await GITHUB_CMS.commitRaw(path, m.data, `Auto-upload blog image: ${fileName}`);
+            // 替换 body 中的 src
+            body = body.replace(m.full, `<img src="/${path}"`);
+            $btn.textContent = `同步图片中 (${i + 1}/${base64Matches.length})...`;
+          } catch (err) {
+            console.error('自动同步图片失败:', err);
+            // 这里我们不中断，但保留 base64 还是报错？建议报错中断。
+            throw new Error(`图片 ${i + 1} 同步至 GitHub 失败，请检查网络或重试`);
+          }
+        }
+      }
 
       // 封面裁切处理
       if (image && coverImgEl) {
