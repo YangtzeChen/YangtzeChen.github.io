@@ -595,9 +595,13 @@ input[type="checkbox"]:checked + .toggle-slider::after { transform: translateX(2
   border-radius: 0 0 var(--cms-radius) var(--cms-radius);
   border-color: var(--border) !important;
 }
-#quill-editor .ql-editor {
-  min-height: 350px;
-  color: var(--text);
+#quill-editor .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 #quill-editor .ql-editor.ql-blank::before {
   color: var(--text-muted);

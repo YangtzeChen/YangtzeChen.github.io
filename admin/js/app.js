@@ -968,7 +968,8 @@
         }
         const base64Data = btoa(binary);
 
-        const ext = file.name ? file.name.split('.').pop() : 'png';
+        const extRaw = file.name ? file.name.split('.').pop().toLowerCase() : 'png';
+        const ext = extRaw === 'jpeg' ? 'jpg' : extRaw;
         
         // 直接使用 ArrayBuffer 计算哈希，更可靠
         const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -1113,14 +1114,16 @@
       let body = quillEditor.root.innerHTML;
  
       // --- 关键：扫描并自动转换正文中的 Base64 图片 ---
-      const base64Regex = /<img src="data:image\/(png|jpeg|webp|gif|jpg);base64,([^"]+)"/g;
+      // 更加鲁棒的正则：匹配包含其他属性的 img 标签
+      const base64Regex = /<img[^>]+src="(data:image\/([^;]+);base64,[^"]+)"[^>]*>/g;
       let match;
       const base64Matches = [];
       while ((match = base64Regex.exec(body)) !== null) {
         base64Matches.push({
-          full: match[0],
-          ext: match[1],
-          data: match[2]
+          fullTag: match[0],
+          dataUrl: match[1],
+          ext: match[2].replace('jpeg', 'jpg'), // 规范化扩展名
+          data: match[1].split(',')[1]
         });
       }
  
@@ -1144,8 +1147,9 @@
           
           try {
             await GITHUB_CMS.commitRaw(path, m.data, `Auto-upload blog image: ${fileName}`);
-            // 替换 body 中的 src
-            body = body.replace(m.full, `<img src="/${path}"`);
+            // 安全替换：只替换 src 部分，保留其他属性 (width, alt 等)
+            const updatedTag = m.fullTag.replace(m.dataUrl, `/${path}`);
+            body = body.replace(m.fullTag, updatedTag);
             $btn.textContent = `同步图片中 (${i + 1}/${base64Matches.length})...`;
           } catch (err) {
             console.error('自动同步图片失败:', err);
