@@ -49,6 +49,7 @@ body {
   margin-left: 2rem;
 }
 .cms-tabs button {
+  font-family: var(--font-heading);
   padding: 0.4rem 1rem;
   border: 1px solid var(--border);
   background: transparent;
@@ -69,6 +70,7 @@ body {
   cursor: not-allowed;
 }
 .cms-back {
+  font-family: var(--font-heading);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-muted);

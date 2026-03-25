@@ -204,6 +204,7 @@ a:hover { color: var(--rose); }
 }
 
 .nav-links a {
+  font-family: var(--font-heading);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-muted);
