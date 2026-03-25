@@ -889,7 +889,9 @@
   function initQuill() {
     // 注册自定义图标
     const icons = Quill.import('ui/icons');
-    icons['gallery'] = '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+    icons['gallery'] = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+    icons['image_local'] = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>';
+    icons['image_url'] = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
 
     quillEditor = new Quill('#quill-editor', {
       theme: 'snow',
@@ -901,11 +903,12 @@
             ['bold', 'italic', 'underline', 'strike'],
             [{ 'list': 'ordered' }, { 'list': 'bullet' }],
             ['blockquote', 'code-block'],
-            ['link', 'image', 'gallery'], // Add gallery here
+            ['link', 'image_local', 'image_url', 'gallery'], // Split into two buttons
             ['clean']
           ],
           handlers: {
-            image: handleQuillImage,
+            image_local: handleImageLocal,
+            image_url: handleImageURL,
             gallery: () => {
               showToast('相册引用功能待开发', 'info');
               // 后续在这里弹出二级窗口选择 content/gallery 下的图片
@@ -955,12 +958,23 @@
     reader.onload = async () => {
       try {
         showToast('正在上传图片...', 'info');
-        const base64Full = reader.result;
-        const base64Data = base64Full.split(',')[1];
+        const buffer = reader.result;
+        const bytes = new Uint8Array(buffer);
+        
+        // 转换为 Base64 供 GitHub API 使用
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = btoa(binary);
+
         const ext = file.name ? file.name.split('.').pop() : 'png';
         
-        // 使用哈希值作为文件名实现去重
-        const hash = await computeImageHash(base64Data);
+        // 直接使用 ArrayBuffer 计算哈希，更可靠
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+        
         const fileName = `img-${hash}.${ext || 'png'}`;
         const path = `content/blog/blog_image/${fileName}`;
 
@@ -975,28 +989,25 @@
         showToast('图片上传失败: ' + e.message, 'error');
       }
     };
-    reader.readAsDataURL(file);
+    reader.readAsArrayBuffer(file);
   }
 
-  function handleQuillImage() {
-    const choice = confirm('是否上传本地图片？\n[确定]：上传本地图片至 GitHub\n[取消]：通过图片 URL 直接引用');
-    
-    if (choice) {
-      const input = document.createElement('input');
-      input.setAttribute('type', 'file');
-      input.setAttribute('accept', 'image/*');
-      input.click();
+  function handleImageLocal() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+      const file = input.files[0];
+      uploadImageFile(file);
+    };
+  }
 
-      input.onchange = async () => {
-        const file = input.files[0];
-        uploadImageFile(file);
-      };
-    } else {
-      const url = prompt('请输入图片 URL:');
-      if (url && url.trim()) {
-        const range = quillEditor.getSelection();
-        quillEditor.insertEmbed(range.index || 0, 'image', url.trim());
-      }
+  function handleImageURL() {
+    const url = prompt('请输入图片 URL:');
+    if (url && url.trim()) {
+      const range = quillEditor.getSelection();
+      quillEditor.insertEmbed(range ? range.index : 0, 'image', url.trim());
     }
   }
 
@@ -1117,7 +1128,17 @@
         $btn.textContent = `同步图片中 (0/${base64Matches.length})...`;
         for (let i = 0; i < base64Matches.length; i++) {
           const m = base64Matches[i];
-          const hash = await computeImageHash(m.data);
+          
+          // 重新计算哈希
+          const binaryString = atob(m.data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let k = 0; k < binaryString.length; k++) {
+            bytes[k] = binaryString.charCodeAt(k);
+          }
+          const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+          
           const fileName = `img-${hash}.${m.ext}`;
           const path = `content/blog/blog_image/${fileName}`;
           
@@ -1290,22 +1311,6 @@
     return str.replace(/"/g, '&quot;');
   }
 
-  // 计算图片内容的哈希值以去重 (SHA-256 前 16 位)
-  async function computeImageHash(base64Data) {
-    try {
-      const binaryString = atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
-    } catch (e) {
-      console.warn('Hash computation failed, fallback to timestamp', e);
-      return Date.now().toString();
-    }
-  }
 
   /**
    * 图片回收逻辑
