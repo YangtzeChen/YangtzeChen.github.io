@@ -617,22 +617,9 @@
           // 1. 上传图片文件
           console.log('[Gallery] Uploading image:', filePath);
           await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
-          
-          // 延迟 2 秒以避免 GitHub API 并发冲突，并确保 Action 触发逻辑清晰
-          if($syncMsg) $syncMsg.textContent = '等待云端响应...';
-          await new Promise(r => setTimeout(r, 2000));
 
-          // 记录上传 JSON 之前的最新 Run ID
-          let lastRunId = null;
-          try {
-            const lastRun = await GITHUB_CMS.getLatestWorkflowRun('rebuild-index.yml');
-            lastRunId = lastRun ? lastRun.id : null;
-            console.log('[Gallery] Last Workflow Run ID:', lastRunId);
-          } catch(e) { console.error('Failed to get last run id', e); }
-
-          // 2. 上传单个元数据文件
-          const jsonPath = `content/gallery/items/gal-${hash}.json`;
-          const metaEntry = {
+          // 2. 更新本地索引并手动提交 (对齐文章管理逻辑，确保即时性)
+          const newEntry = {
             title: title, 
             date: beijingNowFull(),
             images: [{
@@ -641,29 +628,19 @@
               description: desc
             }]
           };
-          console.log('[Gallery] Uploading metadata:', jsonPath);
-          // 修正：JSON 是文本，应使用 commitFile (它会处理 Base64 编码)
-          await GITHUB_CMS.commitFile(jsonPath, JSON.stringify(metaEntry, null, 2), `Gallery: upload metadata ${fileName}`);
+          
+          galleryItems.unshift(newEntry);
+          console.log('[Gallery] Committing index.json manually');
+          await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: sync index for ${fileName}`);
 
-          // --- 进入轮询等待阶段 ---
-          console.log('[Gallery] Starting workflow polling...');
-          const success = await GITHUB_CMS.waitForWorkflow('rebuild-index.yml', lastRunId, (status, attempt) => {
-            if (!$syncMsg) return;
-            if (status === 'waiting_to_start') {
-              $syncMsg.textContent = `云端排队中... (尝试 ${attempt})`;
-            } else if (status === 'in_progress' || status === 'queued') {
-              $syncMsg.textContent = `正在构建索引... (尝试 ${attempt})`;
-            } else {
-              $syncMsg.textContent = `状态: ${status} (尝试 ${attempt})`;
-            }
-          });
+          // 3. 上传单个元数据文件 (作为备写，供 Actions 容错合并)
+          const jsonPath = `content/gallery/items/gal-${hash}.json`;
+          console.log('[Gallery] Uploading backup metadata:', jsonPath);
+          await GITHUB_CMS.commitFile(jsonPath, JSON.stringify(newEntry, null, 2), `Gallery: backup metadata ${fileName}`);
 
-          if (success) {
-            showToast('同步成功，已即时更新', 'success');
-          } else {
-            showToast('同步时间较长或超时，请稍后刷新查看', 'warning');
-          }
-
+          // --- 云端同步完成 ---
+          showToast('上传成功，索引已同步', 'success');
+          
           hideUploadModal();
           if($syncOverlay) $syncOverlay.style.display = 'none';
           loadGalleryManagement();
