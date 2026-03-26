@@ -609,20 +609,28 @@
           // --- 同步准备 ---
           const $syncOverlay = document.getElementById('gallery-sync-overlay');
           const $syncMsg = $syncOverlay ? $syncOverlay.querySelector('.sync-msg') : null;
-          if($syncOverlay) $syncOverlay.style.display = 'flex';
+          if($syncOverlay) {
+             $syncOverlay.style.display = 'flex';
+             if($syncMsg) $syncMsg.textContent = '准备上传中...';
+          }
 
-          // 记录上传前的最新 Run ID
+          // 1. 上传图片文件
+          console.log('[Gallery] Uploading image:', filePath);
+          await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
+          
+          // 延迟 2 秒以避免 GitHub API 并发冲突，并确保 Action 触发逻辑清晰
+          if($syncMsg) $syncMsg.textContent = '等待云端响应...';
+          await new Promise(r => setTimeout(r, 2000));
+
+          // 记录上传 JSON 之前的最新 Run ID
           let lastRunId = null;
           try {
             const lastRun = await GITHUB_CMS.getLatestWorkflowRun('rebuild-index.yml');
             lastRunId = lastRun ? lastRun.id : null;
+            console.log('[Gallery] Last Workflow Run ID:', lastRunId);
           } catch(e) { console.error('Failed to get last run id', e); }
 
-          // 1. 上传图片文件
-          await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
-
-          // 2. 上传单个元数据文件 (builder.py 会根据此文件自动生成 index.json)
-          // 修正：上传到 items/ 目录
+          // 2. 上传单个元数据文件
           const jsonPath = `content/gallery/items/gal-${hash}.json`;
           const metaEntry = {
             title: title, 
@@ -633,15 +641,19 @@
               description: desc
             }]
           };
+          console.log('[Gallery] Uploading metadata:', jsonPath);
           await GITHUB_CMS.commitRaw(jsonPath, JSON.stringify(metaEntry, null, 2), `Gallery: upload metadata ${fileName}`);
 
           // --- 进入轮询等待阶段 ---
+          console.log('[Gallery] Starting workflow polling...');
           const success = await GITHUB_CMS.waitForWorkflow('rebuild-index.yml', lastRunId, (status, attempt) => {
             if (!$syncMsg) return;
             if (status === 'waiting_to_start') {
-              $syncMsg.textContent = `等待排队... (尝试 ${attempt})`;
+              $syncMsg.textContent = `云端排队中... (尝试 ${attempt})`;
             } else if (status === 'in_progress' || status === 'queued') {
-              $syncMsg.textContent = `GitHub 正在构建索引... (尝试 ${attempt})`;
+              $syncMsg.textContent = `正在构建索引... (尝试 ${attempt})`;
+            } else {
+              $syncMsg.textContent = `状态: ${status} (尝试 ${attempt})`;
             }
           });
 

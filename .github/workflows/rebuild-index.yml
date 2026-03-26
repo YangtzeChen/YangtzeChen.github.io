@@ -60,31 +60,42 @@ jobs:
           import os, json
           try:
               out = []
-              # Check if items directory exists, if not create it
-              items_dir = 'items'
-              if not os.path.exists(items_dir):
-                  os.makedirs(items_dir, exist_ok=True)
-              for root, dirs, files in os.walk(items_dir):
-                  for f in files:
-                      if f.endswith('.json'):
-                          try:
-                              with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
-                                  data = json.load(file)
-                              if data:
-                                  if 'images' in data:
-                                      for img in data['images']:
-                                          if img.get('image') and not img['image'].startswith('/'):
-                                              img['image'] = '/content/gallery/' + root.replace('\\', '/') + '/' + img['image']
-                                  out.append(data)
-                          except Exception as e:
-                              print(f'Skipping file {f} due to error: {e}')
-              out.sort(key=lambda x: x.get('date', ''), reverse=True)
+              # Check multiple possible locations for metadata JSONs
+              search_dirs = ['items', '.', 'content/gallery/items']
+              processed_files = set()
+              
+              print(f"Scanning for gallery items in: {search_dirs}")
+              
+              for s_dir in search_dirs:
+                  if not os.path.exists(s_dir):
+                      continue
+                  for root, dirs, files in os.walk(s_dir):
+                      for f in files:
+                          if f.endswith('.json') and f != 'index.json' and f not in processed_files:
+                              f_path = os.path.join(root, f)
+                              try:
+                                  with open(f_path, 'r', encoding='utf-8') as file:
+                                      data = json.load(file)
+                                  if data:
+                                      print(f"Found metadata: {f_path}")
+                                      if isinstance(data, list):
+                                          out.extend(data)
+                                      else:
+                                          out.append(data)
+                                      processed_files.add(f)
+                              except Exception as e:
+                                  print(f"Error reading {f_path}: {e}")
+
+              # Sort outcomes
+              out.sort(key=lambda x: str(x.get('date', '')), reverse=True)
+              print(f"Total entries found: {len(out)}")
+              
               with open('index.json', 'w', encoding='utf-8') as w:
                   json.dump(out, w, indent=2, ensure_ascii=False)
+              print("Successfully wrote index.json")
           except Exception as e:
-              print(f'Fatal error rebuilding gallery index: {e}')
-              with open('index.json', 'w', encoding='utf-8') as w:
-                  w.write('[]')
+              print(f"Builder failed: {e}")
+              exit(1)
           EOF
           python3 builder.py
 
