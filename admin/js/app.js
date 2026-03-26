@@ -13,6 +13,9 @@
   let selectedCoverImage = null;
   let autoSaveTimer = null;
   let galleryItems = [];      // 从 content/gallery/index.json 加载的数据
+  let galleryEditMode = false; // 是否处于相册编辑模式
+  let galleryEditPostIdx = -1;
+  let galleryEditImgIdx = -1;
 
   // ---- DOM 元素 ----
   const $articlesPanel = document.getElementById('list-view');
@@ -218,6 +221,7 @@
   // ---- 加载文章列表 (优先从 GitHub 获取) ----
   async function loadArticles() {
     console.log('开始加载文章列表...');
+    if ($articleList) $articleList.innerHTML = '<div class="spinner"></div>';
     try {
       // 尝试从 GitHub API 获取最新的 index.json (增加时间戳防缓存)
       const content = await GITHUB_CMS.fetchFile('content/blog/index.json');
@@ -516,15 +520,23 @@
     $galleryList.innerHTML = allImages.map(img => `
       <div class="masonry-item fade-in visible">
         <div class="cms-card-overlay">
+          <button class="btn-icon edit-gallery-btn" data-post-idx="${img.postIdx}" data-img-idx="${img.imgIdx}">编辑</button>
           <button class="btn-icon danger delete-gallery-btn" data-post-idx="${img.postIdx}" data-img-idx="${img.imgIdx}">删除</button>
         </div>
         <img src="${escAttr(img.image)}" alt="${escAttr(img.sub_title)}" loading="lazy">
         <div class="masonry-overlay">
           <span class="masonry-title">${escHtml(img.sub_title || '无题')}</span>
+          <span class="masonry-date">${img.date ? img.date.split(' ')[0] : ''}</span>
           <span class="masonry-desc">${escHtml(img.description || '') || '<i style="opacity:0.5">暂无描述</i>'}</span>
         </div>
       </div>
     `).join('');
+
+    $galleryList.querySelectorAll('.edit-gallery-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openGalleryEditModal(parseInt(btn.dataset.postIdx), parseInt(btn.dataset.imgIdx));
+      });
+    });
 
     $galleryList.querySelectorAll('.delete-gallery-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -539,14 +551,12 @@
     try {
       showToast('正在删除...', 'info');
       
-      // 注意：这里的 postIdx 和 imgIdx 是渲染时的索引，直接操作 galleryItems
-      // 实际上我们应该根据唯一标识删除，但在这里为了简单，我们重新处理
-      // 这里的逻辑需要小心，因为 allImages 的排序和 galleryItems 本身的顺序不一致
-      // 但是 delete-gallery-btn 携带的是原始 galleryItems 的索引。
-      
       const post = galleryItems[postIdx];
       if (!post) return;
       
+      const img = post.images[imgIdx];
+      const imagePath = img.image;
+
       // 移除图片
       post.images.splice(imgIdx, 1);
       
@@ -562,12 +572,8 @@
       );
 
       // 同时删除对应的单个 JSON 文件 (如果存在)
-      const fileName = post.title? `gal-${post.date.replace(/[:-\s]/g, '')}.json` : null; 
-      // 注意：之前的上传 logic 没有保存文件名，我们通过日期匹配或者只是尝试删除
-      // 为了鲁棒，我们在新上传逻辑里把这个 JSON 文件名定好
-      const imagePath = post.images[0].image;
-      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp)$/i, '.json');
-      await GITHUB_CMS.deleteFile(`content/gallery/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
+      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
+      await GITHUB_CMS.deleteFile(`content/gallery/items/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
 
       showToast('删除成功', 'success');
       loadGalleryManagement();
@@ -576,8 +582,79 @@
     }
   }
 
-  async function handleGalleryUpload(e) {
+  function openGalleryEditModal(postIdx, imgIdx) {
+    const post = galleryItems[postIdx];
+    const img = post.images[imgIdx];
+    
+    galleryEditMode = true;
+    galleryEditPostIdx = postIdx;
+    galleryEditImgIdx = imgIdx;
+
+    $uploadModal.style.display = 'flex';
+    $uploadModal.querySelector('.auth-title').textContent = '编辑照片信息';
+    document.getElementById('btn-confirm-upload').textContent = '保存修改';
+    
+    $galleryTitleInput.value = img.sub_title || '';
+    $galleryDescInput.value = img.description || '';
+    
+    $galleryPreviewImg.src = img.image;
+    $galleryPreviewImg.style.display = 'block';
+    $galleryDropZone.querySelector('.upload-placeholder').style.display = 'none';
+    
+    // 编辑模式下不能更换图片文件
+    $galleryFileInput.disabled = true;
+    $galleryDropZone.style.opacity = '0.6';
+    $galleryDropZone.style.cursor = 'not-allowed';
+
+    setTimeout(() => $uploadModal.querySelector('.auth-card').classList.add('visible'), 50);
+  }
+
+  async function handleGalleryFormSubmit(e) {
     e.preventDefault();
+    if (galleryEditMode) {
+      await handleGalleryEdit();
+    } else {
+      await handleGalleryUpload();
+    }
+  }
+
+  async function handleGalleryEdit() {
+    const title = $galleryTitleInput.value.trim();
+    const desc = $galleryDescInput.value.trim();
+
+    if (!title) return showToast('请输入标题', 'error');
+
+    showToast('正在保存...', 'info');
+    const $btn = document.getElementById('btn-confirm-upload');
+    $btn.disabled = true;
+    $btn.textContent = '保存中...';
+
+    try {
+      const post = galleryItems[galleryEditPostIdx];
+      const img = post.images[galleryEditImgIdx];
+      
+      img.sub_title = title;
+      img.description = desc;
+      if (post.images.length === 1) post.title = title;
+
+      await GITHUB_CMS.commitRaw('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: update metadata for ${img.sub_title}`);
+
+      const imagePath = img.image;
+      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
+      await GITHUB_CMS.commitFile(`content/gallery/items/${jsonName}`, JSON.stringify(post, null, 2), `Gallery: update backup metadata for ${jsonName}`);
+
+      showToast('修改成功', 'success');
+      hideUploadModal();
+      loadGalleryManagement();
+    } catch (e) {
+      showToast('保存失败: ' + e.message, 'error');
+    } finally {
+      $btn.disabled = false;
+      $btn.textContent = '保存修改';
+    }
+  }
+
+  async function handleGalleryUpload() {
     const file = $galleryFileInput.files[0];
     const title = $galleryTitleInput.value.trim();
     const desc = $galleryDescInput.value.trim();
@@ -678,6 +755,16 @@
   function hideUploadModal() {
     $uploadModal.style.display = 'none';
     $uploadModal.querySelector('.auth-card').classList.remove('visible');
+    
+    // 重置编辑状态
+    galleryEditMode = false;
+    galleryEditPostIdx = -1;
+    galleryEditImgIdx = -1;
+    $uploadModal.querySelector('.auth-title').textContent = '上传照片';
+    document.getElementById('btn-confirm-upload').textContent = '开始上传';
+    $galleryFileInput.disabled = false;
+    $galleryDropZone.style.opacity = '1';
+    $galleryDropZone.style.cursor = 'pointer';
   }
 
   // ---- Quill Gallery Picker ----
@@ -950,8 +1037,8 @@
 
     // ---- Gallery Manager Events ----
     if ($btnShowUpload) $btnShowUpload.addEventListener('click', showUploadModal);
+    if ($uploadForm) $uploadForm.addEventListener('submit', handleGalleryFormSubmit);
     if ($btnCancelUpload) $btnCancelUpload.addEventListener('click', hideUploadModal);
-    if ($uploadForm) $uploadForm.addEventListener('submit', handleGalleryUpload);
 
     if ($galleryDropZone) {
       $galleryDropZone.addEventListener('click', () => $galleryFileInput.click());
