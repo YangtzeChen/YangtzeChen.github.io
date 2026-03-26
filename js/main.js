@@ -653,11 +653,12 @@
     document.getElementById('adv-lb-caption').innerHTML = postObj.caption ? postObj.caption.replace(/\\n|\n/g, '<br>') : '';
     
     const subinfo = document.getElementById('adv-lb-subinfo');
-    if (imgObj.sub_title || imgObj.sub_caption) {
+    if (imgObj.sub_title || imgObj.description || imgObj.sub_caption) {
       subinfo.style.display = 'block';
+      const showSubtitle = imgObj.sub_title && imgObj.sub_title !== postObj.title;
       subinfo.innerHTML = `
-        ${imgObj.sub_title ? '<h4>' + imgObj.sub_title + '</h4>' : ''}
-        ${imgObj.sub_caption ? '<p>' + imgObj.sub_caption.replace(/\\n|\n/g, '<br>') + '</p>' : ''}
+        ${showSubtitle ? '<h4>' + imgObj.sub_title + '</h4>' : ''}
+        ${(imgObj.description || imgObj.sub_caption) ? '<p>' + (imgObj.description || imgObj.sub_caption).replace(/\\n|\n/g, '<br>') + '</p>' : ''}
       `;
     } else {
       subinfo.style.display = 'none';
