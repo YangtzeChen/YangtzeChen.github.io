@@ -56,6 +56,7 @@ jobs:
       - name: Rebuild gallery index.json
         run: |
           cd content/gallery
+          cat << 'EOF' > builder.py
           import os, json
           try:
               items_dir = 'items'

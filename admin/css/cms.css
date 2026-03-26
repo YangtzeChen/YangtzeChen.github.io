@@ -644,7 +644,8 @@ input[type="checkbox"]:checked + .toggle-slider::after { transform: translateX(2
   z-index: 10;
 }
 
-.post-card:hover .cms-card-overlay {
+.post-card:hover .cms-card-overlay,
+.masonry-item:hover .cms-card-overlay {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);

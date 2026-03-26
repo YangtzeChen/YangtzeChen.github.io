@@ -767,8 +767,11 @@
     $galleryDropZone.style.cursor = 'pointer';
   }
 
-  // ---- Quill Gallery Picker ----
-  async function showGalleryPicker() {
+  // ---- Gallery Picker (Quill & Cover) ----
+  let currentPickerCallback = null;
+
+  async function showGalleryPicker(onSelect) {
+    currentPickerCallback = onSelect;
     try {
       $pickerModal.style.display = 'flex';
       $pickerGrid.innerHTML = '<div class="spinner"></div>';
@@ -800,9 +803,7 @@
 
       $pickerGrid.querySelectorAll('.cover-gallery-item').forEach(item => {
         item.addEventListener('click', () => {
-          const url = item.dataset.url;
-          const range = quillEditor.getSelection();
-          quillEditor.insertEmbed(range ? range.index : 0, 'image', url);
+          if (currentPickerCallback) currentPickerCallback(item.dataset.url);
           hideGalleryPicker();
         });
       });
@@ -1039,6 +1040,16 @@
     if ($btnShowUpload) $btnShowUpload.addEventListener('click', showUploadModal);
     if ($uploadForm) $uploadForm.addEventListener('submit', handleGalleryFormSubmit);
     if ($btnCancelUpload) $btnCancelUpload.addEventListener('click', hideUploadModal);
+
+    // 封面相册选择
+    const $btnOpenCoverPicker = document.getElementById('btn-open-cover-picker');
+    if ($btnOpenCoverPicker) {
+      $btnOpenCoverPicker.addEventListener('click', () => {
+        showGalleryPicker((url) => {
+          selectCoverImage(url);
+        });
+      });
+    }
 
     if ($galleryDropZone) {
       $galleryDropZone.addEventListener('click', () => $galleryFileInput.click());
@@ -1334,7 +1345,12 @@
           handlers: {
             image_local: handleImageLocal,
             image_url: handleImageURL,
-            gallery: showGalleryPicker
+            gallery: () => {
+              showGalleryPicker((url) => {
+                const range = quillEditor.getSelection();
+                quillEditor.insertEmbed(range ? range.index : 0, 'image', url);
+              });
+            }
           }
         },
         clipboard: {
@@ -1521,7 +1537,10 @@
     const $btn = document.getElementById('btn-publish');
     const oldText = $btn.textContent;
     $btn.disabled = true;
-    $btn.textContent = '正在同步到 GitHub...';
+    $btn.textContent = '保存中...';
+
+    const $syncOverlay = document.getElementById('article-sync-overlay');
+    if ($syncOverlay) $syncOverlay.style.display = 'flex';
 
     const isVisible = $visibleSwitch.checked;
 
@@ -1619,11 +1638,15 @@
       clearLocalStorage();
       renderArticleList();
       showToast('文章内容已同步到 GitHub', 'success');
+      if ($syncOverlay) $syncOverlay.style.display = 'none';
       showList();
-      renderArticleList();
+      await loadArticles(); 
     } catch (e) {
       console.error('发布失败:', e);
       showToast('发布失败: ' + e.message, 'error');
+      if (document.getElementById('article-sync-overlay')) {
+        document.getElementById('article-sync-overlay').style.display = 'none';
+      }
     } finally {
       $btn.disabled = false;
       $btn.textContent = oldText;
