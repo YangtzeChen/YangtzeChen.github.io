@@ -563,15 +563,20 @@
         galleryItems.splice(targetPostIdx, 1);
       }
 
+      // 1. 先删除对应的单个元数据 JSON 文件
+      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
+      await GITHUB_CMS.deleteFile(`content/gallery/items/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
+
+      // 2. 再删除实际图片文件 (保持仓库整洁)
+      const imgRepoPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+      await GITHUB_CMS.deleteFile(imgRepoPath, `Gallery: delete image file for ${jsonName}`);
+
+      // 3. 最后提交主索引 (触发 Action 重建，此时元数据已删，不会再恢复)
       await GITHUB_CMS.commitFile(
         'content/gallery/index.json',
         JSON.stringify(galleryItems, null, 2),
         'Gallery: delete image'
       );
-
-      // 同时删除对应的单个 JSON 文件 (如果存在)
-      const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
-      await GITHUB_CMS.deleteFile(`content/gallery/items/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
 
       showToast('删除成功', 'success');
       loadGalleryManagement();
@@ -709,7 +714,6 @@
           console.log('[Gallery] Uploading image:', filePath);
           await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
 
-          // 2. 更新本地索引并手动提交 (对齐文章管理逻辑，确保即时性)
           const newEntry = {
             title: title, 
             date: beijingNowFull(),
@@ -719,15 +723,16 @@
               description: desc
             }]
           };
-          
-          galleryItems.unshift(newEntry);
-          console.log('[Gallery] Committing index.json manually');
-          await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: sync index for ${fileName}`);
 
-          // 3. 上传单个元数据文件 (作为备写，供 Actions 容错合并)
+          // 2. 上传单个元数据文件 (必须在 index.json 之前，否则 Action 重建可能漏掉)
           const jsonPath = `content/gallery/items/gal-${hash}.json`;
           console.log('[Gallery] Uploading backup metadata:', jsonPath);
           await GITHUB_CMS.commitFile(jsonPath, JSON.stringify(newEntry, null, 2), `Gallery: backup metadata ${fileName}`);
+
+          // 3. 更新本地索引并手动提交主索引
+          galleryItems.unshift(newEntry);
+          console.log('[Gallery] Committing index.json manually');
+          await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: sync index for ${fileName}`);
 
           // --- 云端同步完成 ---
           showToast('上传成功，索引已同步', 'success');

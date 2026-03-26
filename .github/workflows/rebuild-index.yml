@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: rebuild-index
+  cancel-in-progress: true
+
 jobs:
   rebuild:
     runs-on: ubuntu-latest
