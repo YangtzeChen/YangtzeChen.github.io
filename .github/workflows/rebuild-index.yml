@@ -69,7 +69,7 @@ jobs:
                   for f in files:
                       f_path = os.path.join(items_dir, f)
                       try:
-                          with open(f_path, 'r', encoding='utf-8') as f_in:
+                          with open(f_path, 'r', encoding='utf-8-sig') as f_in:
                               data = json.load(f_in)
                           
                           # Verify images exist
