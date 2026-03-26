@@ -593,78 +593,85 @@
     try {
       const reader = new FileReader();
       reader.onload = async () => {
-        const buffer = reader.result;
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-        const base64Data = btoa(binary);
+        try {
+          const buffer = reader.result;
+          const bytes = new Uint8Array(buffer);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+          const base64Data = btoa(binary);
 
-        const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-        const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
-        const fileName = `gal-${hash}.${ext}`;
-        const filePath = `content/gallery/images/${fileName}`;
+          const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+          const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+          const hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+          const fileName = `gal-${hash}.${ext}`;
+          const filePath = `content/gallery/images/${fileName}`;
 
-        // 记录上传前的最新 Run ID
-        const lastRun = await GITHUB_CMS.getLatestWorkflowRun('rebuild-index.yml');
-        const lastRunId = lastRun ? lastRun.id : null;
+          // --- 同步准备 ---
+          const $syncOverlay = document.getElementById('gallery-sync-overlay');
+          const $syncMsg = $syncOverlay ? $syncOverlay.querySelector('.sync-msg') : null;
+          if($syncOverlay) $syncOverlay.style.display = 'flex';
 
-        // 1. 上传图片文件
-        await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
+          // 记录上传前的最新 Run ID
+          let lastRunId = null;
+          try {
+            const lastRun = await GITHUB_CMS.getLatestWorkflowRun('rebuild-index.yml');
+            lastRunId = lastRun ? lastRun.id : null;
+          } catch(e) { console.error('Failed to get last run id', e); }
 
-        // 2. 更新 index.json (手动更新，确保即时性)
-        const newEntry = {
-          title: title, 
-          date: beijingNowFull(),
-          images: [{
-            image: `/${filePath}`,
-            sub_title: title,
-            description: desc
-          }]
-        };
-        
-        galleryItems.unshift(newEntry);
-        await GITHUB_CMS.commitRaw(
-          'content/gallery/index.json',
-          JSON.stringify(galleryItems, null, 2),
-          'Gallery: add new image'
-        );
+          // 1. 上传图片文件
+          await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
 
-        // 3. 上传单个元数据文件 (修正路径到 items/，供 builder.py 使用)
-        const jsonPath = `content/gallery/items/gal-${hash}.json`;
-        await GITHUB_CMS.commitRaw(jsonPath, JSON.stringify(newEntry, null, 2), `Gallery: upload metadata ${fileName}`);
+          // 2. 上传单个元数据文件 (builder.py 会根据此文件自动生成 index.json)
+          // 修正：上传到 items/ 目录
+          const jsonPath = `content/gallery/items/gal-${hash}.json`;
+          const metaEntry = {
+            title: title, 
+            date: beijingNowFull(),
+            images: [{
+              image: `/${filePath}`,
+              sub_title: title,
+              description: desc
+            }]
+          };
+          await GITHUB_CMS.commitRaw(jsonPath, JSON.stringify(metaEntry, null, 2), `Gallery: upload metadata ${fileName}`);
 
-        // --- 进入同步等待阶段 ---
-        const $syncOverlay = document.getElementById('gallery-sync-overlay');
-        const $syncMsg = $syncOverlay.querySelector('.sync-msg');
-        if($syncOverlay) $syncOverlay.style.display = 'flex';
+          // --- 进入轮询等待阶段 ---
+          const success = await GITHUB_CMS.waitForWorkflow('rebuild-index.yml', lastRunId, (status, attempt) => {
+            if (!$syncMsg) return;
+            if (status === 'waiting_to_start') {
+              $syncMsg.textContent = `等待排队... (尝试 ${attempt})`;
+            } else if (status === 'in_progress' || status === 'queued') {
+              $syncMsg.textContent = `GitHub 正在构建索引... (尝试 ${attempt})`;
+            }
+          });
 
-        const success = await GITHUB_CMS.waitForWorkflow('rebuild-index.yml', lastRunId, (status, attempt) => {
-          if (status === 'waiting_to_start') {
-            $syncMsg.textContent = `等待排队中... (${attempt})`;
-          } else if (status === 'in_progress') {
-            $syncMsg.textContent = `GitHub 正在构建索引... (${attempt})`;
-          } else if (status === 'queued') {
-            $syncMsg.textContent = `排队中... (${attempt})`;
+          if (success) {
+            showToast('同步成功，已即时更新', 'success');
+          } else {
+            showToast('同步时间较长或超时，请稍后刷新查看', 'warning');
           }
-        });
 
-        if (success) {
-          showToast('上传与同步成功', 'success');
-        } else {
-          showToast('上传成功，但同步 Actions 异常，请刷新页面检查', 'warning');
+          hideUploadModal();
+          if($syncOverlay) $syncOverlay.style.display = 'none';
+          loadGalleryManagement();
+        } catch (err) {
+          console.error('Upload process error:', err);
+          showToast('上传失败: ' + err.message, 'error');
+          const $syncOverlay = document.getElementById('gallery-sync-overlay');
+          if($syncOverlay) $syncOverlay.style.display = 'none';
+        } finally {
+          $btn.disabled = false;
+          $btn.textContent = '开始上传';
         }
-
-        hideUploadModal();
-        if($syncOverlay) $syncOverlay.style.display = 'none';
-        loadGalleryManagement();
+      };
+      reader.onerror = () => {
+        showToast('读取文件失败', 'error');
+        $btn.disabled = false;
+        $btn.textContent = '开始上传';
       };
       reader.readAsArrayBuffer(file);
     } catch (e) {
-      showToast('上传失败: ' + e.message, 'error');
-      const $syncOverlay = document.getElementById('gallery-sync-overlay');
-      if($syncOverlay) $syncOverlay.style.display = 'none';
-    } finally {
+      showToast('系统异常: ' + e.message, 'error');
       $btn.disabled = false;
       $btn.textContent = '开始上传';
     }

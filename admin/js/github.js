@@ -197,21 +197,38 @@ const GITHUB_CMS = (function() {
    * Polls until the workflow run completes
    */
   async function waitForWorkflow(workflowFileName, lastRunId, onProgress) {
-    const maxAttempts = 30; // 5 minutes max
-    const interval = 10000; // 10 seconds
+    const maxAttempts = 40; // ~6 minutes
+    const interval = 8000;  // 8 seconds
+
+    console.log(`[waitForWorkflow] Starting poll for ${workflowFileName}. lastRunId: ${lastRunId}`);
 
     for (let i = 0; i < maxAttempts; i++) {
-      const run = await getLatestWorkflowRun(workflowFileName);
-      if (run) {
-        // If we have a lastRunId, ensure this is a NEWER run
-        if (lastRunId && run.id <= lastRunId) {
-          if (onProgress) onProgress('waiting_to_start', i);
-        } else {
-          if (onProgress) onProgress(run.status, i, run.conclusion);
-          if (run.status === 'completed') {
-            return run.conclusion === 'success';
+      try {
+        const run = await getLatestWorkflowRun(workflowFileName);
+        if (run) {
+          console.log(`[waitForWorkflow] Poll ${i}: Run ID ${run.id}, status: ${run.status}, conclusion: ${run.conclusion}`);
+          
+          // If we had no previous run, or we're waiting for a NEW one to start
+          if (lastRunId !== null && run.id <= lastRunId) {
+            if (run.status === 'completed') {
+              // The "latest" is still an old completed one, wait for the new one to trigger
+              if (onProgress) onProgress('waiting_to_start', i);
+            } else {
+              // It's in progress but it's the OLD one? Unlikely but check
+              if (onProgress) onProgress(run.status, i);
+            }
+          } else {
+            // This is either the first run ever, or a NEWER run than lastRunId
+            if (onProgress) onProgress(run.status, i, run.conclusion);
+            if (run.status === 'completed') {
+              return run.conclusion === 'success';
+            }
           }
+        } else {
+          if (onProgress) onProgress('searching', i);
         }
+      } catch (e) {
+        console.error('[waitForWorkflow] Poll error:', e);
       }
       await new Promise(resolve => setTimeout(resolve, interval));
     }
