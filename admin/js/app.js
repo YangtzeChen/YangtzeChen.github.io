@@ -520,8 +520,8 @@
     $galleryList.innerHTML = allImages.map(img => `
       <div class="masonry-item fade-in visible">
         <div class="cms-card-overlay">
-          <button class="btn-icon edit-gallery-btn" data-post-idx="${img.postIdx}" data-img-idx="${img.imgIdx}">编辑</button>
-          <button class="btn-icon danger delete-gallery-btn" data-post-idx="${img.postIdx}" data-img-idx="${img.imgIdx}">删除</button>
+          <button class="btn-icon edit-gallery-btn" data-image="${escAttr(img.image)}">编辑</button>
+          <button class="btn-icon danger delete-gallery-btn" data-image="${escAttr(img.image)}">删除</button>
         </div>
         <img src="${escAttr(img.image)}" alt="${escAttr(img.sub_title)}" loading="lazy">
         <div class="masonry-overlay">
@@ -533,25 +533,37 @@
     `).join('');
   }
 
-  async function deleteGalleryItem(postIdx, imgIdx) {
+  async function deleteGalleryItem(imagePath) {
     try {
       showToast('正在删除...', 'info');
       
-      const post = galleryItems[postIdx];
-      if (!post) return;
-      
-      const img = post.images[imgIdx];
-      const imagePath = img.image;
+      let targetPostIdx = -1;
+      let targetImgIdx = -1;
 
+      // 根据路径查找索引
+      galleryItems.forEach((post, pIdx) => {
+        if (post.images) {
+          const iIdx = post.images.findIndex(img => img.image === imagePath);
+          if (iIdx !== -1) {
+            targetPostIdx = pIdx;
+            targetImgIdx = iIdx;
+          }
+        }
+      });
+
+      if (targetPostIdx === -1) return showToast('找不到该照片', 'error');
+
+      const post = galleryItems[targetPostIdx];
+      
       // 移除图片
-      post.images.splice(imgIdx, 1);
+      post.images.splice(targetImgIdx, 1);
       
       // 如果 post 下没图片了，也移除 post
       if (post.images.length === 0) {
-        galleryItems.splice(postIdx, 1);
+        galleryItems.splice(targetPostIdx, 1);
       }
 
-      await GITHUB_CMS.commitRaw(
+      await GITHUB_CMS.commitFile(
         'content/gallery/index.json',
         JSON.stringify(galleryItems, null, 2),
         'Gallery: delete image'
@@ -568,22 +580,38 @@
     }
   }
 
-  function openGalleryEditModal(postIdx, imgIdx) {
-    const post = galleryItems[postIdx];
-    const img = post.images[imgIdx];
+  function openGalleryEditModal(imagePath) {
+    let targetPost = null;
+    let targetImg = null;
+    let targetPostIdx = -1;
+    let targetImgIdx = -1;
+
+    galleryItems.forEach((post, pIdx) => {
+      if (post.images) {
+        const iIdx = post.images.findIndex(img => img.image === imagePath);
+        if (iIdx !== -1) {
+          targetPost = post;
+          targetImg = post.images[iIdx];
+          targetPostIdx = pIdx;
+          targetImgIdx = iIdx;
+        }
+      }
+    });
+
+    if (!targetPost || !targetImg) return showToast('找不到该照片', 'error');
     
     galleryEditMode = true;
-    galleryEditPostIdx = postIdx;
-    galleryEditImgIdx = imgIdx;
+    galleryEditPostIdx = targetPostIdx;
+    galleryEditImgIdx = targetImgIdx;
 
     $uploadModal.style.display = 'flex';
     $uploadModal.querySelector('.auth-title').textContent = '编辑照片信息';
     document.getElementById('btn-confirm-upload').textContent = '保存修改';
     
-    $galleryTitleInput.value = img.sub_title || '';
-    $galleryDescInput.value = img.description || '';
+    $galleryTitleInput.value = targetImg.sub_title || '';
+    $galleryDescInput.value = targetImg.description || '';
     
-    $galleryPreviewImg.src = img.image;
+    $galleryPreviewImg.src = targetImg.image;
     $galleryPreviewImg.style.display = 'block';
     $galleryDropZone.querySelector('.upload-placeholder').style.display = 'none';
     
@@ -623,7 +651,7 @@
       img.description = desc;
       if (post.images.length === 1) post.title = title;
 
-      await GITHUB_CMS.commitRaw('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: update metadata for ${img.sub_title}`);
+      await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: update metadata for ${img.sub_title}`);
 
       const imagePath = img.image;
       const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
@@ -1033,15 +1061,13 @@
         const deleteBtn = e.target.closest('.delete-gallery-btn');
         if (editBtn) {
           e.stopPropagation();
-          const pIdx = parseInt(editBtn.getAttribute('data-post-idx'));
-          const iIdx = parseInt(editBtn.getAttribute('data-img-idx'));
-          openGalleryEditModal(pIdx, iIdx);
+          const imagePath = editBtn.getAttribute('data-image');
+          openGalleryEditModal(imagePath);
         } else if (deleteBtn) {
           e.stopPropagation();
-          const pIdx = parseInt(deleteBtn.getAttribute('data-post-idx'));
-          const iIdx = parseInt(deleteBtn.getAttribute('data-img-idx'));
+          const imagePath = deleteBtn.getAttribute('data-image');
           if (confirm('确定删除这张照片？')) {
-            deleteGalleryItem(pIdx, iIdx);
+            deleteGalleryItem(imagePath);
           }
         }
       });
