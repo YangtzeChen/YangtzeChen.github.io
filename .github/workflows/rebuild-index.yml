@@ -56,45 +56,68 @@ jobs:
       - name: Rebuild gallery index.json
         run: |
           cd content/gallery
-          cat << 'EOF' > builder.py
-          import os, json
+          import os, json, time
           try:
+              # --- Diagnostic Info ---
+              print(f"--- Environment Check ---")
+              print(f"Working directory: {os.getcwd()}")
+              for root, dirs, files in os.walk('.'):
+                  path = root.split(os.sep)
+                  print((len(path) - 1) * '  ', os.path.basename(root))
+                  for file in files:
+                      print(len(path) * '  ', file)
+              
               out = []
-              # Check multiple possible locations for metadata JSONs
-              search_dirs = ['items', '.', 'content/gallery/items']
-              processed_files = set()
-              
-              print(f"Scanning for gallery items in: {search_dirs}")
-              
-              for s_dir in search_dirs:
-                  if not os.path.exists(s_dir):
-                      continue
-                  for root, dirs, files in os.walk(s_dir):
-                      for f in files:
-                          if f.endswith('.json') and f != 'index.json' and f not in processed_files:
-                              f_path = os.path.join(root, f)
-                              try:
-                                  with open(f_path, 'r', encoding='utf-8') as file:
-                                      data = json.load(file)
-                                  if data:
-                                      print(f"Found metadata: {f_path}")
-                                      if isinstance(data, list):
-                                          out.extend(data)
-                                      else:
-                                          out.append(data)
-                                      processed_files.add(f)
-                              except Exception as e:
-                                  print(f"Error reading {f_path}: {e}")
+              items_dir = 'items'
+              images_dir = 'images'
+              processed_hashes = set()
 
-              # Sort outcomes
+              # 1. First, process metadata files in items/ (if any)
+              if os.path.exists(items_dir):
+                  print(f"Scanning metadata in {items_dir}...")
+                  for root, dirs, files in os.walk(items_dir):
+                      for f in files:
+                          if f.endswith('.json'):
+                              try:
+                                  with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
+                                      data = json.load(file)
+                                  if data and 'images' in data:
+                                      out.append(data)
+                                      for img in data['images']:
+                                          # Extract hash or name to avoid duplication
+                                          processed_hashes.add(os.path.basename(img['image']))
+                              except Exception as e:
+                                  print(f"  Error loading {f}: {e}")
+
+              # 2. Second, scan images/ for orphan images
+              if os.path.exists(images_dir):
+                  print(f"Scanning orphan images in {images_dir}...")
+                  for root, dirs, files in os.walk(images_dir):
+                      for f in files:
+                          if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.jfif')):
+                              if f not in processed_hashes and f != '.gitkeep':
+                                  print(f"  Found orphan image: {f}")
+                                  # Create a default entry
+                                  entry = {
+                                      "title": f.split('.')[0].replace('gal-', 'Photo: '),
+                                      "date": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+                                      "images": [{
+                                          "image": f"/content/gallery/images/{f}",
+                                          "sub_title": "Auto-indexed",
+                                          "description": "Captured by automatic builder."
+                                      }]
+                                  }
+                                  out.append(entry)
+
+              # 3. Finalize
               out.sort(key=lambda x: str(x.get('date', '')), reverse=True)
-              print(f"Total entries found: {len(out)}")
+              print(f"Total entries: {len(out)}")
               
               with open('index.json', 'w', encoding='utf-8') as w:
                   json.dump(out, w, indent=2, ensure_ascii=False)
               print("Successfully wrote index.json")
           except Exception as e:
-              print(f"Builder failed: {e}")
+              print(f"Fatal builder error: {e}")
               exit(1)
           EOF
           python3 builder.py
