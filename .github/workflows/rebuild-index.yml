@@ -59,23 +59,48 @@ jobs:
           import os, json
           try:
               items_dir = 'items'
+              images_dir = 'images'
               out = []
+              print(f"Starting build. Items: {items_dir}, Images: {images_dir}")
+              
               if os.path.exists(items_dir):
                   files = [f for f in os.listdir(items_dir) if f.endswith('.json')]
                   for f in files:
+                      f_path = os.path.join(items_dir, f)
                       try:
-                          with open(os.path.join(items_dir, f), 'r', encoding='utf-8') as file:
-                              data = json.load(file)
-                          if data:
-                              if isinstance(data, list): out.extend(data)
-                              else: out.append(data)
+                          with open(f_path, 'r', encoding='utf-8') as f_in:
+                              data = json.load(f_in)
+                          
+                          # Verify images exist
+                          if data and 'images' in data:
+                              valid_entries = []
+                              for item in data['images']:
+                                  img_path = item.get('image', '').lstrip('/')
+                                  # img_path is like content/gallery/images/xxx.jpg
+                                  # Since we are in content/gallery, we check relatively or from root
+                                  # The path in repo is content/gallery/images/xxx.jpg
+                                  # Being in content/gallery, checking 'images/xxx.jpg' is correct.
+                                  rel_img_path = img_path.replace('content/gallery/', '')
+                                  
+                                  if os.path.exists(rel_img_path):
+                                      valid_entries.append(item)
+                                  else:
+                                      print(f"  Warning: Image {rel_img_path} MISSING for {f}")
+                              
+                              if valid_entries:
+                                  data['images'] = valid_entries
+                                  out.append(data)
                       except Exception as e:
                           print(f'Error reading {f}: {e}')
               
+              # Sort by date
               out.sort(key=lambda x: str(x.get('date', '')), reverse=True)
+              print(f"Total valid entries: {len(out)}")
+              
+              # Write index.json (UTF-8 No BOM)
               with open('index.json', 'w', encoding='utf-8') as w:
                   json.dump(out, w, indent=2, ensure_ascii=False)
-              print(f"Gallery rebuild successful. Total items: {len(out)}")
+              print("Successfully wrote index.json")
           except Exception as e:
               print(f'Fatal error rebuilding gallery index: {e}')
               exit(1)
