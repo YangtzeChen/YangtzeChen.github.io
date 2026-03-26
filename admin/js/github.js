@@ -177,11 +177,54 @@ const GITHUB_CMS = (function() {
     return await res.json();
   }
 
+  /**
+   * Fetches the latest runs for a workflow
+   */
+  async function getLatestWorkflowRun(workflowFileName) {
+    const token = CMS_AUTH.getToken();
+    if (!token) return null;
+
+    const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${workflowFileName}/runs?per_page=1`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.workflow_runs && data.workflow_runs.length > 0 ? data.workflow_runs[0] : null;
+  }
+
+  /**
+   * Polls until the workflow run completes
+   */
+  async function waitForWorkflow(workflowFileName, lastRunId, onProgress) {
+    const maxAttempts = 30; // 5 minutes max
+    const interval = 10000; // 10 seconds
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const run = await getLatestWorkflowRun(workflowFileName);
+      if (run) {
+        // If we have a lastRunId, ensure this is a NEWER run
+        if (lastRunId && run.id <= lastRunId) {
+          if (onProgress) onProgress('waiting_to_start', i);
+        } else {
+          if (onProgress) onProgress(run.status, i, run.conclusion);
+          if (run.status === 'completed') {
+            return run.conclusion === 'success';
+          }
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+    return false;
+  }
+
   return {
     commitFile,
     fetchFile,
     deleteFile,
     commitRaw,
-    listDir
+    listDir,
+    getLatestWorkflowRun,
+    waitForWorkflow
   };
 })();
