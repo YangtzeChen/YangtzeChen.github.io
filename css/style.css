@@ -377,6 +377,7 @@ a:hover { color: var(--rose); }
    ============================================================ */
 .section {
   padding: 4rem 0;
+  background: var(--bg);
 }
 
 .section-title {
@@ -1007,6 +1008,7 @@ a:hover { color: var(--rose); }
 .site-footer {
   margin-top: auto;
   padding: 2.5rem 0;
+  background: var(--bg);
   text-align: center;
   border-top: 1px solid var(--border);
   color: var(--text-muted);

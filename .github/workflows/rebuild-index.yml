@@ -90,7 +90,7 @@ jobs:
 
       - name: Generate build version
         run: |
-          python3 -c "import json, time; with open('content/version.json', 'w') as f: json.dump({'version': int(time.time() * 1000)}, f)"
+          python3 -c "import json, time; f=open('content/version.json', 'w'); json.dump({'version': int(time.time() * 1000)}, f); f.close()"
 
       - name: Commit updated indexes
         run: |
