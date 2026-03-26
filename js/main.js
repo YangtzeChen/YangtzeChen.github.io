@@ -5,6 +5,9 @@
 (function () {
   'use strict';
 
+  // Gallery global state for lightbox lookup
+  let galleryData = [];
+
   // ---- Cache-Busting: Version Check ----
   async function checkUpdate() {
     try {
@@ -518,6 +521,7 @@
       const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
+      galleryData = posts; // Store globally
 
       grid.innerHTML = '';
 
@@ -539,6 +543,7 @@
           
           const item = document.createElement('div');
           item.className = 'masonry-item fade-in';
+          item.setAttribute('data-image', imgObj.image);
           
           item.innerHTML = `
             <img src="${imgObj.image}" alt="${imgObj.sub_title || post.title || ''}" loading="lazy">
@@ -547,12 +552,22 @@
               <span class="masonry-date">${formatDate(post.date)}</span>
             </div>
           `;
-          
-          item.addEventListener('click', () => openDetailView(imgObj, post));
           grid.appendChild(item);
           requestAnimationFrame(() => item.classList.add('visible'));
         });
       });
+
+      // Use event delegation for Gallery page
+      if (!grid.dataset.listener) {
+        grid.addEventListener('click', (e) => {
+          const item = e.target.closest('.masonry-item');
+          if (item) {
+            const imagePath = item.getAttribute('data-image');
+            openDetailView(imagePath);
+          }
+        });
+        grid.dataset.listener = 'true';
+      }
     } catch {
       grid.innerHTML = `
         <div class="empty-state" style="width: 100%; min-height: 280px;">
@@ -572,6 +587,7 @@
       const res = await fetch(`/content/gallery/index.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('not found');
       const posts = await res.json();
+      galleryData = posts; // Sync global state
       
       container.innerHTML = '';
       
@@ -582,7 +598,7 @@
           p.images.forEach(img => latestImages.push({ post: p, img: img }));
         }
       }
-      latestImages = latestImages.slice(0, 8);
+      latestImages = latestImages.slice(0, 8); // 取最新8张 (保持与原逻辑一致)
 
       if (latestImages.length === 0) {
         container.innerHTML = `
@@ -597,6 +613,8 @@
       latestImages.forEach((data) => {
         const item = document.createElement('div');
         item.className = 'masonry-item fade-in';
+        item.setAttribute('data-image', data.img.image);
+        
         item.innerHTML = `
           <img src="${data.img.image}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">
           <div class="masonry-overlay">
@@ -604,10 +622,21 @@
             <span class="masonry-date">${formatDate(data.post.date)}</span>
           </div>
         `;
-        item.addEventListener('click', () => openDetailView(data.img, data.post));
         container.appendChild(item);
         requestAnimationFrame(() => item.classList.add('visible'));
       });
+
+      // Use event delegation for Homepage
+      if (!container.dataset.listener) {
+        container.addEventListener('click', (e) => {
+          const item = e.target.closest('.masonry-item');
+          if (item) {
+            const imagePath = item.getAttribute('data-image');
+            openDetailView(imagePath);
+          }
+        });
+        container.dataset.listener = 'true';
+      }
     } catch {
       container.innerHTML = `
         <div class="empty-state" style="width: 100%; min-height: 280px;">
@@ -619,7 +648,23 @@
   }
 
   // ---- 500px Style Advanced Lightbox (Detail View) ----
-  function openDetailView(imgObj, postObj) {
+  function openDetailView(imagePath) {
+    // Robust lookup in global state
+    let targetPost = null;
+    let targetImg = null;
+
+    galleryData.forEach(post => {
+      if (post.images) {
+        const found = post.images.find(img => img.image === imagePath);
+        if (found) {
+          targetPost = post;
+          targetImg = found;
+        }
+      }
+    });
+
+    if (!targetPost || !targetImg) return;
+
     let lb = document.getElementById('advanced-lightbox');
     if (!lb) {
       lb = document.createElement('div');
@@ -629,13 +674,11 @@
         <button class="adv-lb-close" id="adv-lb-close" aria-label="Close">✕</button>
         <div class="adv-lb-content">
           <div class="adv-lb-media">
-            <img id="adv-lb-img" src="" alt="">
+            <img id="adv-lb-img" src="" alt="" loading="eager">
           </div>
           <div class="adv-lb-info">
             <h2 id="adv-lb-title"></h2>
             <div class="adv-lb-meta" id="adv-lb-date"></div>
-            <div class="adv-lb-caption" id="adv-lb-caption"></div>
-            
             <div class="adv-lb-subinfo" id="adv-lb-subinfo"></div>
           </div>
         </div>
@@ -647,19 +690,22 @@
       });
     }
 
-    document.getElementById('adv-lb-img').src = imgObj.image;
-    document.getElementById('adv-lb-title').textContent = postObj.title || '相册分享';
-    document.getElementById('adv-lb-date').textContent = formatDate(postObj.date);
-    document.getElementById('adv-lb-caption').innerHTML = postObj.caption ? postObj.caption.replace(/\\n|\n/g, '<br>') : '';
+    // Reset image to avoid flicker
+    const lbImg = document.getElementById('adv-lb-img');
+    lbImg.src = ''; 
+    lbImg.src = targetImg.image;
+
+    // Title Logic: Top shows img title or post title
+    document.getElementById('adv-lb-title').textContent = targetImg.sub_title || targetPost.title || '相册分享';
+    document.getElementById('adv-lb-date').textContent = formatDate(targetPost.date);
     
+    // Description Logic: Bottom shows description
     const subinfo = document.getElementById('adv-lb-subinfo');
-    if (imgObj.sub_title || imgObj.description || imgObj.sub_caption) {
+    const desc = targetImg.description || targetImg.sub_caption || '';
+    
+    if (desc) {
       subinfo.style.display = 'block';
-      const showSubtitle = imgObj.sub_title && imgObj.sub_title !== postObj.title;
-      subinfo.innerHTML = `
-        ${showSubtitle ? '<h4>' + imgObj.sub_title + '</h4>' : ''}
-        ${(imgObj.description || imgObj.sub_caption) ? '<p>' + (imgObj.description || imgObj.sub_caption).replace(/\\n|\n/g, '<br>') + '</p>' : ''}
-      `;
+      subinfo.innerHTML = `<p>${desc.replace(/\\n|\n/g, '<br>')}</p>`;
     } else {
       subinfo.style.display = 'none';
     }
