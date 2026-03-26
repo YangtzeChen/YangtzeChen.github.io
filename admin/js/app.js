@@ -531,20 +531,6 @@
         </div>
       </div>
     `).join('');
-
-    $galleryList.querySelectorAll('.edit-gallery-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        openGalleryEditModal(parseInt(btn.dataset.postIdx), parseInt(btn.dataset.imgIdx));
-      });
-    });
-
-    $galleryList.querySelectorAll('.delete-gallery-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if(confirm('确定删除这张照片？')) {
-          deleteGalleryItem(parseInt(btn.dataset.postIdx), parseInt(btn.dataset.imgIdx));
-        }
-      });
-    });
   }
 
   async function deleteGalleryItem(postIdx, imgIdx) {
@@ -1040,6 +1026,26 @@
     if ($btnShowUpload) $btnShowUpload.addEventListener('click', showUploadModal);
     if ($uploadForm) $uploadForm.addEventListener('submit', handleGalleryFormSubmit);
     if ($btnCancelUpload) $btnCancelUpload.addEventListener('click', hideUploadModal);
+
+    if ($galleryList) {
+      $galleryList.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-gallery-btn');
+        const deleteBtn = e.target.closest('.delete-gallery-btn');
+        if (editBtn) {
+          e.stopPropagation();
+          const pIdx = parseInt(editBtn.getAttribute('data-post-idx'));
+          const iIdx = parseInt(editBtn.getAttribute('data-img-idx'));
+          openGalleryEditModal(pIdx, iIdx);
+        } else if (deleteBtn) {
+          e.stopPropagation();
+          const pIdx = parseInt(deleteBtn.getAttribute('data-post-idx'));
+          const iIdx = parseInt(deleteBtn.getAttribute('data-img-idx'));
+          if (confirm('确定删除这张照片？')) {
+            deleteGalleryItem(pIdx, iIdx);
+          }
+        }
+      });
+    }
 
     // 封面相册选择
     const $btnOpenCoverPicker = document.getElementById('btn-open-cover-picker');
