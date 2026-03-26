@@ -642,7 +642,8 @@
             }]
           };
           console.log('[Gallery] Uploading metadata:', jsonPath);
-          await GITHUB_CMS.commitRaw(jsonPath, JSON.stringify(metaEntry, null, 2), `Gallery: upload metadata ${fileName}`);
+          // 修正：JSON 是文本，应使用 commitFile (它会处理 Base64 编码)
+          await GITHUB_CMS.commitFile(jsonPath, JSON.stringify(metaEntry, null, 2), `Gallery: upload metadata ${fileName}`);
 
           // --- 进入轮询等待阶段 ---
           console.log('[Gallery] Starting workflow polling...');
