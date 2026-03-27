@@ -155,6 +155,15 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
+  // Helper to get thumbnail path
+  function getThumbnailPath(imagePath) {
+    if (!imagePath) return '';
+    const parts = imagePath.split('/');
+    const filename = parts.pop();
+    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    return `/content/gallery/thumbnails/${nameWithoutExt}.webp`;
+  }
+
   // ---- Parse YAML Front-matter from Markdown ----
   function parseFrontmatter(raw) {
     const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
@@ -582,14 +591,32 @@
           item.className = 'masonry-item fade-in';
           item.setAttribute('data-image', imgObj.image);
           
+          const thumbPath = getThumbnailPath(imgObj.image);
+          
           item.innerHTML = `
-            <img src="${imgObj.image}" alt="${imgObj.sub_title || post.title || ''}" loading="lazy">
+            <div class="img-placeholder">
+              <img class="img-fade-in" src="${thumbPath}" alt="${imgObj.sub_title || post.title || ''}" loading="lazy">
+            </div>
             <div class="masonry-overlay">
               <span class="masonry-title">${imgObj.sub_title || post.title || '无题'}</span>
               <span class="masonry-date">${formatDate(post.date)}</span>
             </div>
           `;
           grid.appendChild(item);
+          
+          const img = item.querySelector('img');
+          const placeholder = item.querySelector('.img-placeholder');
+          const markLoaded = () => {
+            img.classList.add('img-loaded');
+            placeholder.classList.add('is-loaded');
+          };
+          if (img.complete) markLoaded();
+          else img.addEventListener('load', markLoaded);
+
+          // Background preload original for lightbox
+          const preloadOrig = new Image();
+          preloadOrig.src = imgObj.image;
+
           requestAnimationFrame(() => item.classList.add('visible'));
         });
       });
@@ -652,14 +679,32 @@
         item.className = 'masonry-item fade-in';
         item.setAttribute('data-image', data.img.image);
         
+        const thumbPath = getThumbnailPath(data.img.image);
+        
         item.innerHTML = `
-          <img src="${data.img.image}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">
+          <div class="img-placeholder">
+            <img class="img-fade-in" src="${thumbPath}" alt="${data.img.sub_title || data.post.title || ''}" loading="lazy">
+          </div>
           <div class="masonry-overlay">
             <span class="masonry-title">${data.img.sub_title || data.post.title || '无题'}</span>
             <span class="masonry-date">${formatDate(data.post.date)}</span>
           </div>
         `;
         container.appendChild(item);
+        
+        const img = item.querySelector('img');
+        const placeholder = item.querySelector('.img-placeholder');
+        const markLoaded = () => {
+          img.classList.add('img-loaded');
+          placeholder.classList.add('is-loaded');
+        };
+        if (img.complete) markLoaded();
+        else img.addEventListener('load', markLoaded);
+
+        // Background preload original for lightbox
+        const preloadOrig = new Image();
+        preloadOrig.src = data.img.image;
+
         requestAnimationFrame(() => item.classList.add('visible'));
       });
 
