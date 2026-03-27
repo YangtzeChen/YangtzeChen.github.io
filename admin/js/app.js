@@ -27,11 +27,14 @@
     isProcessing = state;
     const overlay = document.getElementById('global-mutex-overlay');
     const textEl = document.getElementById('mutex-text');
+    const bar = document.getElementById('mutex-bar');
+    const stepEl = document.getElementById('mutex-step');
     
     if (overlay) {
       overlay.style.display = state ? 'flex' : 'none';
       if (state) {
-        overlay.classList.add('fade-in');
+        if (bar) bar.style.width = '0%';
+        if (stepEl) stepEl.textContent = '';
       }
     }
     if (textEl && text) {
@@ -43,15 +46,26 @@
   }
 
   /**
+   * 动态更新加载状态比例及详细步骤
+   * @param {number} percent - 0-100
+   * @param {string} text - 主标题 (可选)
+   * @param {string} stepText - 详细步骤 (可选)
+   */
+  function updateGlobalStatus(percent, text = null, stepText = null) {
+    const bar = document.getElementById('mutex-bar');
+    const textEl = document.getElementById('mutex-text');
+    const stepEl = document.getElementById('mutex-step');
+    
+    if (bar) bar.style.width = percent + '%';
+    if (textEl && text) textEl.textContent = text;
+    if (stepEl && stepText !== null) stepEl.textContent = stepText;
+  }
+
+  /**
    * 动态更新加载状态文案
    * @param {string} text 
    */
-  function updateLoadingText(text) {
-    const textEl = document.getElementById('mutex-text');
-    if (textEl && text) {
-      textEl.textContent = text;
-    }
-  }
+
 
   // ---- DOM 元素 ----
   const $articlesPanel = document.getElementById('list-view');
@@ -590,6 +604,7 @@
 
       if (targetPostIdx === -1) return showToast('找不到该照片', 'error');
 
+      updateGlobalStatus(20, null, '正在准备删除操作...');
       const post = galleryItems[targetPostIdx];
       
       // 移除图片
@@ -602,18 +617,22 @@
 
       // 1. 先删除对应的单个元数据 JSON 文件
       const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
+      updateGlobalStatus(40, null, '正在删除元数据...');
       await GITHUB_CMS.deleteFile(`content/gallery/items/${jsonName}`, `Gallery: delete metadata for ${jsonName}`);
 
       // 2. 再删除实际图片文件 (保持仓库整洁)
       const imgRepoPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+      updateGlobalStatus(60, null, '正在删除图片文件...');
       await GITHUB_CMS.deleteFile(imgRepoPath, `Gallery: delete image file for ${jsonName}`);
 
       // 3. 最后提交主索引 (触发 Action 重建，此时元数据已删，不会再恢复)
+      updateGlobalStatus(85, null, '正在更新相册索引...');
       await GITHUB_CMS.commitFile(
         'content/gallery/index.json',
         JSON.stringify(galleryItems, null, 2),
         'Gallery: delete image'
       );
+      updateGlobalStatus(100, '删除成功', '正在加载...');
 
       showToast('删除成功', 'success');
       loadGalleryManagement();
@@ -689,18 +708,19 @@
 
     try {
       setGlobalLoading(true, '正在更新照片信息...');
-      const post = galleryItems[galleryEditPostIdx];
-      const img = post.images[galleryEditImgIdx];
-      
       img.sub_title = title;
       img.description = desc;
       if (post.images.length === 1) post.title = title;
 
+      updateGlobalStatus(40, null, '正在更新主索引...');
       await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: update metadata for ${img.sub_title}`);
 
       const imagePath = img.image;
       const jsonName = imagePath.split('/').pop().replace(/\.(jpg|jpeg|png|webp|gif|svg)$/i, '.json');
+      updateGlobalStatus(80, null, '正在同步备份元数据...');
       await GITHUB_CMS.commitFile(`content/gallery/items/${jsonName}`, JSON.stringify(post, null, 2), `Gallery: update backup metadata for ${jsonName}`);
+
+      updateGlobalStatus(100, '修改成功', '正在完成...');
 
       showToast('修改成功', 'success');
       hideUploadModal();
@@ -729,6 +749,7 @@
 
     try {
       setGlobalLoading(true, '正在准备上传照片...');
+      updateGlobalStatus(5, null, '正在读取本地文件...');
       const reader = new FileReader();
       reader.onload = async () => {
         try {
@@ -744,16 +765,10 @@
           const fileName = `gal-${hash}.${ext}`;
           const filePath = `content/gallery/images/${fileName}`;
 
-          // --- 同步准备 ---
-          const $syncOverlay = document.getElementById('gallery-sync-overlay');
-          const $syncMsg = $syncOverlay ? $syncOverlay.querySelector('.sync-msg') : null;
-          if($syncOverlay) {
-             $syncOverlay.style.display = 'flex';
-             if($syncMsg) $syncMsg.textContent = '准备上传中...';
-          }
+          // --- 上传图片文件 ---
 
           // 1. 上传图片文件
-          updateLoadingText('正在上传图片文件 (I/O)...');
+          updateGlobalStatus(20, null, '正在上传图片文件 (I/O)...');
           console.log('[Gallery] Uploading image:', filePath);
           await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
 
@@ -769,13 +784,17 @@
 
           // 2. 上传单个元数据文件 (必须在 index.json 之前，否则 Action 重建可能漏掉)
           const jsonPath = `content/gallery/items/gal-${hash}.json`;
+          updateGlobalStatus(60, null, '正在同步备份元数据...');
           console.log('[Gallery] Uploading backup metadata:', jsonPath);
           await GITHUB_CMS.commitFile(jsonPath, JSON.stringify(newEntry, null, 2), `Gallery: backup metadata ${fileName}`);
 
           // 3. 更新本地索引并手动提交主索引
           galleryItems.unshift(newEntry);
+          updateGlobalStatus(85, null, '正在更新相册索引...');
           console.log('[Gallery] Committing index.json manually');
           await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: sync index for ${fileName}`);
+
+          updateGlobalStatus(100, '上传成功', '同步完成！');
 
           setGlobalLoading(false);
           showToast('上传成功，索引已同步', 'success');
@@ -1618,6 +1637,7 @@
     $btn.textContent = '保存中...';
 
     setGlobalLoading(true, '正在保存并同步至 GitHub...');
+    updateGlobalStatus(10, null, '正在准备文章元数据...');
 
     const isVisible = $visibleSwitch.checked;
 
@@ -1644,6 +1664,7 @@
       }
  
       if (base64Matches.length > 0) {
+        updateGlobalStatus(25, null, `检测到本地图片 (${base64Matches.length} 张)，开始上传...`);
         for (let i = 0; i < base64Matches.length; i++) {
           const m = base64Matches[i];
           const binaryString = atob(m.data);
@@ -1662,7 +1683,7 @@
             await GITHUB_CMS.commitRaw(path, m.data, `Auto-upload blog image: ${fileName}`);
             const updatedTag = m.fullTag.replace(m.dataUrl, `/${path}`);
             body = body.replace(m.fullTag, updatedTag);
-            updateLoadingText(`解析并上传正文图片 (${i + 1}/${base64Matches.length})...`);
+            updateGlobalStatus(25 + Math.floor((i + 1) / base64Matches.length * 40), null, `上传正文图片 (${i + 1}/${base64Matches.length})...`);
           } catch (err) {
             console.error('自动同步图片失败:', err);
             throw new Error(`图片 ${i + 1} 同步至 GitHub 失败，请检查网络或重试`);
@@ -1689,14 +1710,18 @@
         ''
       ].filter(l => l !== '').join('\n');
 
+      updateGlobalStatus(70, null, '正在上传文章 MarkDown 文件...');
       await GITHUB_CMS.commitFile(`content/blog/${slug}.md`, frontmatter, `Update article: ${title}`);
 
+      updateGlobalStatus(85, null, '正在更新全站索引...');
       const articleEntry = { slug, title, date, updated, draft, excerpt, cardColor, image };
       const existingIdx = articles.findIndex(p => p.slug === slug);
       if (existingIdx >= 0) articles[existingIdx] = articleEntry;
       else articles.unshift(articleEntry);
 
       await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), 'Sync blog index');
+
+      updateGlobalStatus(100, '同步完成！', '正在刷新列表...');
 
       localStorage.setItem('cms_index', JSON.stringify(articles));
       $updatedInput.value = updated.slice(0, 16).replace(' ', 'T');
@@ -1725,7 +1750,7 @@
       const slugs = articles.map(a => a.slug);
       const usedImages = new Set();
       
-      updateLoadingText(`正在扫描正文 (共 ${slugs.length} 篇)...`);
+      updateGlobalStatus(5, null, `正在扫描正文 (共 ${slugs.length} 篇)...`);
       for (const slug of slugs) {
         try {
           const res = await fetch(`/content/blog/${slug}.md?t=${Date.now()}`);
@@ -1737,30 +1762,34 @@
             usedImages.add(m[0].split('/').pop());
           }
         } catch (e) {}
+        updateGlobalStatus(5 + Math.floor((slugs.indexOf(slug) + 1) / slugs.length * 40), null, `扫描文章 (${slugs.indexOf(slug) + 1}/${slugs.length})...`);
       }
 
-      updateLoadingText('正在拉取文件列表...');
+      updateGlobalStatus(50, null, '正在拉取文件列表...');
       const files = await GITHUB_CMS.listDir('content/blog/blog_image');
       const repoFiles = files.filter(f => f.type === 'file' && f.name !== '.gitkeep');
       const orphans = repoFiles.filter(f => !usedImages.has(f.name));
       
       if (orphans.length === 0) {
         showToast('仓库很干净', 'success');
+        setGlobalLoading(false);
         return;
       }
 
       if (!confirm(`扫描完成：\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
+        setGlobalLoading(false);
         return;
       }
 
       let successCount = 0;
       for (const file of orphans) {
         try {
-          updateLoadingText(`正在清理 (${successCount + 1}/${orphans.length})...`);
+          updateGlobalStatus(60 + Math.floor((successCount + 1) / orphans.length * 35), null, `正在清理图片 (${successCount + 1}/${orphans.length})...`);
           await GITHUB_CMS.deleteFile(file.path, `Recycle unused image: ${file.name}`);
           successCount++;
         } catch (e) {}
       }
+      updateGlobalStatus(100, '清理完成', '完成同步');
 
       showToast(`清理完成！共删除 ${successCount} 张图片`, 'success');
     } catch (e) {
@@ -1783,8 +1812,11 @@
       const saved = JSON.parse(localStorage.getItem('cms_saved') || '[]');
       localStorage.setItem('cms_saved', JSON.stringify(saved.filter(s => s.slug !== slug)));
 
+      updateGlobalStatus(30, null, '正在从 GitHub 移除 MarkDown 文件...');
       await GITHUB_CMS.deleteFile(`content/blog/${slug}.md`, `Delete article file: ${slug}`);
+      updateGlobalStatus(80, null, '正在更新全站索引...');
       await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), `Delete article index: ${slug}`);
+      updateGlobalStatus(100, '删除成功', '完成刷新');
 
       renderArticleList();
       showToast('文章及源文件已删除', 'success');

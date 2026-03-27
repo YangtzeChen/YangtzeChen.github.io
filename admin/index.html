@@ -118,12 +118,7 @@
           </div>
         </form>
 
-        <!-- 同步覆盖层 -->
-        <div id="gallery-sync-overlay" class="sync-overlay" style="display:none;">
-          <div class="sync-spinner"></div>
-          <p class="sync-msg">正在同步到 GitHub Actions...</p>
-          <p class="sync-submsg">这可能需要 1-2 分钟，请勿关闭窗口。</p>
-        </div>
+
       </div>
     </div>
 
@@ -267,12 +262,7 @@
             </div>
           </form>
           
-          <!-- 文章发布同步覆盖层 -->
-          <div id="article-sync-overlay" class="sync-overlay" style="display:none;">
-            <div class="sync-spinner"></div>
-            <p class="sync-msg">正在同步到 GitHub Actions...</p>
-            <p class="sync-submsg">正在保存文章并更新索引，这通常需要 1 分钟左右。</p>
-          </div>
+
         </div>
       </div>
     </section>
@@ -307,6 +297,10 @@
     <div class="mutex-content">
       <div class="mutex-spinner"></div>
       <p id="mutex-text" class="mutex-text">正在同步至 GitHub，请勿关闭页面...</p>
+      <div class="mutex-progress">
+        <div id="mutex-bar" class="mutex-progress-bar" style="width: 0%;"></div>
+      </div>
+      <p id="mutex-step" class="mutex-step"></p>
     </div>
   </div>
 

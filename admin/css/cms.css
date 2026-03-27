@@ -21,7 +21,7 @@ body {
 .cms-nav {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 200;
   background: var(--nav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -84,6 +84,10 @@ body {
 .cms-back:hover {
   background: var(--bg-alt);
   color: var(--text);
+}
+
+.theme-picker {
+  margin-left: 1.5rem;
 }
 
 /* --- 主内容区域 --- */
@@ -988,10 +992,10 @@ input:checked + .slider:before {
 .mutex-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 20000; /* Priority over all other modals */
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 30000; /* Priority over all other modals */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1002,26 +1006,54 @@ input:checked + .slider:before {
 .mutex-content {
   text-align: center;
   color: #fff;
+  width: 90%;
+  max-width: 400px;
   animation: mutexFadeIn 0.3s ease;
 }
 
 .mutex-spinner {
-  width: 44px;
-  height: 44px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  width: 50px;
+  height: 50px;
+  border: 3.5px solid rgba(255, 255, 255, 0.15);
   border-top-color: #fff;
   border-radius: 50%;
   margin: 0 auto 1.5rem;
-  animation: mutexSpin 0.8s linear infinite;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  animation: mutexSpin 0.9s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 .mutex-text {
   font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.mutex-progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  backdrop-filter: blur(4px);
+}
+
+.mutex-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #fff);
+  width: 0%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.mutex-step {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  margin: 0;
 }
 
 @keyframes mutexSpin {
@@ -1029,7 +1061,7 @@ input:checked + .slider:before {
 }
 
 @keyframes mutexFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
