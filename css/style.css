@@ -857,7 +857,7 @@ a:hover { color: var(--rose); }
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--nav-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -880,8 +880,8 @@ a:hover { color: var(--rose); }
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.06);
-  color: #333;
+  background: var(--shadow);
+  color: var(--text);
   font-size: 1.5rem;
   cursor: pointer;
   z-index: 1010;
@@ -897,7 +897,7 @@ a:hover { color: var(--rose); }
   width: 88vw;
   max-height: 90vh;
   flex-direction: column;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -914,7 +914,7 @@ a:hover { color: var(--rose); }
   justify-content: center;
   padding: 1.5rem;
   position: relative;
-  background: #FAFAFA;
+  background: var(--bg-alt);
   min-height: 300px;
 }
 .adv-lb-media img {
@@ -925,8 +925,8 @@ a:hover { color: var(--rose); }
 }
 
 .adv-lb-info {
-  background: #fff;
-  color: #2C2C2C;
+  background: var(--card-bg);
+  color: var(--text);
   padding: 2.5rem 2rem;
   display: flex;
   flex-direction: column;
@@ -938,19 +938,19 @@ a:hover { color: var(--rose); }
     height: auto;
     max-height: 90vh;
     overflow-y: auto;
-    border-left: 1px solid #EAEAEA;
+    border-left: 1px solid var(--border);
   }
 }
 
 .adv-lb-info h2 {
   font-family: var(--font-heading);
   font-size: 1.4rem;
-  color: #1a1a1a;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 .adv-lb-meta {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 1.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -959,22 +959,22 @@ a:hover { color: var(--rose); }
 .adv-lb-caption {
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #555;
+  color: var(--text-muted);
   margin-bottom: 2rem;
 }
 
 .adv-lb-subinfo {
-  border-top: 1px solid #EAEAEA;
+  border-top: 1px solid var(--border);
   padding-top: 1.5rem;
 }
 .adv-lb-subinfo h4 {
   font-size: 1rem;
-  color: #1a1a1a;
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
 .adv-lb-subinfo p {
   font-size: 0.9rem;
-  color: #777;
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
