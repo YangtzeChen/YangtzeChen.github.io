@@ -1217,3 +1217,53 @@ a:hover { color: var(--rose); }
   letter-spacing: 0.15em;
   white-space: nowrap;
 }
+
+/* ============================================================
+   Image Enhancement: Skeleton & Fade-in
+   ============================================================ */
+.img-placeholder {
+  position: relative;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: 100%;
+  min-height: 180px; /* Prevent total collapse */
+  transition: background 0.4s var(--ease);
+  /* The margin will be handled by the original img styles or the wrapper itself */
+}
+
+/* Shimmer scanline effect */
+.img-placeholder::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 2s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  to { left: 100%; }
+}
+
+.img-placeholder.is-loaded {
+  background: transparent;
+  min-height: auto;
+}
+.img-placeholder.is-loaded::after {
+  display: none;
+}
+
+.img-fade-in {
+  opacity: 0;
+  transition: opacity 0.55s var(--ease) !important;
+}
+
+.img-loaded {
+  opacity: 1 !important;
+}

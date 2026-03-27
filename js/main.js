@@ -431,6 +431,42 @@
     });
   }
 
+  // ---- Blog: Enhance Markdown Images (Skeleton + Lazy + Fade-in) ----
+  function enhanceMarkdownImages(container) {
+    if (!container) return;
+    const imgs = container.querySelectorAll('img');
+    imgs.forEach(img => {
+      // 1. Add native lazy loading
+      img.setAttribute('loading', 'lazy');
+      
+      // 2. Add fade-in class
+      img.classList.add('img-fade-in');
+      
+      // 3. Create wrapper placeholder
+      if (!img.parentElement.classList.contains('img-placeholder')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'img-placeholder';
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+      }
+
+      // 4. Handle Load event (caching aware)
+      const markLoaded = () => {
+        img.classList.add('img-loaded');
+        const wrapper = img.parentElement;
+        if (wrapper && wrapper.classList.contains('img-placeholder')) {
+          wrapper.classList.add('is-loaded');
+        }
+      };
+
+      if (img.complete) {
+        markLoaded();
+      } else {
+        img.addEventListener('load', markLoaded);
+      }
+    });
+  }
+
   // ---- Blog: Load Single Post ----
   async function loadSinglePost(slug) {
     const listView = document.getElementById('blog-list-view');
@@ -462,6 +498,7 @@
         </div>
       `;
       postBody.innerHTML = marked.parse(body);
+      enhanceMarkdownImages(postBody);
       
       postHeader.classList.remove('fade-in', 'visible');
       postBody.classList.remove('fade-in', 'visible');
