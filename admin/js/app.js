@@ -16,6 +16,42 @@
   let galleryEditMode = false; // 是否处于相册编辑模式
   let galleryEditPostIdx = -1;
   let galleryEditImgIdx = -1;
+  let isProcessing = false; // 全局状态锁 (UI Mutex Lock)
+
+  /**
+   * 切换全局加载状态与 UI 锁定
+   * @param {boolean} state - true 为上锁，false 为解锁
+   * @param {string} text - 显示的自定义文案
+   */
+  function setGlobalLoading(state, text = '正在同步至 GitHub，请勿关闭页面...') {
+    isProcessing = state;
+    const overlay = document.getElementById('global-mutex-overlay');
+    const textEl = document.getElementById('mutex-text');
+    
+    if (overlay) {
+      overlay.style.display = state ? 'flex' : 'none';
+      if (state) {
+        overlay.classList.add('fade-in');
+      }
+    }
+    if (textEl && text) {
+      textEl.textContent = text;
+    }
+    
+    // 锁定滚动
+    document.body.style.overflow = state ? 'hidden' : '';
+  }
+
+  /**
+   * 动态更新加载状态文案
+   * @param {string} text 
+   */
+  function updateLoadingText(text) {
+    const textEl = document.getElementById('mutex-text');
+    if (textEl && text) {
+      textEl.textContent = text;
+    }
+  }
 
   // ---- DOM 元素 ----
   const $articlesPanel = document.getElementById('list-view');
@@ -534,8 +570,9 @@
   }
 
   async function deleteGalleryItem(imagePath) {
+    if (isProcessing) return;
     try {
-      showToast('正在删除...', 'info');
+      setGlobalLoading(true, '正在从 GitHub 删除照片...');
       
       let targetPostIdx = -1;
       let targetImgIdx = -1;
@@ -582,6 +619,8 @@
       loadGalleryManagement();
     } catch (e) {
       showToast('删除失败: ' + e.message, 'error');
+    } finally {
+      setGlobalLoading(false);
     }
   }
 
@@ -638,17 +677,18 @@
   }
 
   async function handleGalleryEdit() {
+    if (isProcessing) return;
     const title = $galleryTitleInput.value.trim();
     const desc = $galleryDescInput.value.trim();
 
     if (!title) return showToast('请输入标题', 'error');
 
-    showToast('正在保存...', 'info');
     const $btn = document.getElementById('btn-confirm-upload');
     $btn.disabled = true;
     $btn.textContent = '保存中...';
 
     try {
+      setGlobalLoading(true, '正在更新照片信息...');
       const post = galleryItems[galleryEditPostIdx];
       const img = post.images[galleryEditImgIdx];
       
@@ -670,10 +710,12 @@
     } finally {
       $btn.disabled = false;
       $btn.textContent = '保存修改';
+      setGlobalLoading(false);
     }
   }
 
   async function handleGalleryUpload() {
+    if (isProcessing) return;
     const file = $galleryFileInput.files[0];
     const title = $galleryTitleInput.value.trim();
     const desc = $galleryDescInput.value.trim();
@@ -681,12 +723,12 @@
     if (!file) return showToast('请选择照片', 'error');
     if (!title) return showToast('请输入标题', 'error');
 
-    showToast('正在上传...', 'info');
     const $btn = document.getElementById('btn-confirm-upload');
     $btn.disabled = true;
     $btn.textContent = '上传中...';
 
     try {
+      setGlobalLoading(true, '正在准备上传照片...');
       const reader = new FileReader();
       reader.onload = async () => {
         try {
@@ -711,6 +753,7 @@
           }
 
           // 1. 上传图片文件
+          updateLoadingText('正在上传图片文件 (I/O)...');
           console.log('[Gallery] Uploading image:', filePath);
           await GITHUB_CMS.commitRaw(filePath, base64Data, `Gallery: upload ${fileName}`);
 
@@ -734,17 +777,15 @@
           console.log('[Gallery] Committing index.json manually');
           await GITHUB_CMS.commitFile('content/gallery/index.json', JSON.stringify(galleryItems, null, 2), `Gallery: sync index for ${fileName}`);
 
-          // --- 云端同步完成 ---
+          setGlobalLoading(false);
           showToast('上传成功，索引已同步', 'success');
           
           hideUploadModal();
-          if($syncOverlay) $syncOverlay.style.display = 'none';
           loadGalleryManagement();
         } catch (err) {
           console.error('Upload process error:', err);
           showToast('上传失败: ' + err.message, 'error');
-          const $syncOverlay = document.getElementById('gallery-sync-overlay');
-          if($syncOverlay) $syncOverlay.style.display = 'none';
+          setGlobalLoading(false);
         } finally {
           $btn.disabled = false;
           $btn.textContent = '开始上传';
@@ -1567,17 +1608,16 @@
 
   // ---- 保存文章到 GitHub ----
   async function saveArticle() {
+    if (isProcessing) return;
     const title = $titleInput.value.trim();
     if (!title) return showToast('请输入标题', 'error');
 
-    // 按钮进入加载状态 (统一使用 btn-publish)
     const $btn = document.getElementById('btn-publish');
     const oldText = $btn.textContent;
     $btn.disabled = true;
     $btn.textContent = '保存中...';
 
-    const $syncOverlay = document.getElementById('article-sync-overlay');
-    if ($syncOverlay) $syncOverlay.style.display = 'flex';
+    setGlobalLoading(true, '正在保存并同步至 GitHub...');
 
     const isVisible = $visibleSwitch.checked;
 
@@ -1588,11 +1628,9 @@
       const excerpt = $excerptInput.value.trim();
       const cardColor = selectedCoverColor || '';
       let image = selectedCoverImage || '';
-      const draft = isVisible ? 'false' : 'true'; // 保持 draft 字段名以兼容旧代码，但语义改变
+      const draft = isVisible ? 'false' : 'true';
       let body = quillEditor.root.innerHTML;
- 
-      // --- 关键：扫描并自动转换正文中的 Base64 图片 ---
-      // 更加鲁棒的正则：匹配包含其他属性的 img 标签
+  
       const base64Regex = /<img[^>]+src="(data:image\/([^;]+);base64,[^"]+)"[^>]*>/g;
       let match;
       const base64Matches = [];
@@ -1600,17 +1638,14 @@
         base64Matches.push({
           fullTag: match[0],
           dataUrl: match[1],
-          ext: match[2].replace('jpeg', 'jpg'), // 规范化扩展名
+          ext: match[2].replace('jpeg', 'jpg'),
           data: match[1].split(',')[1]
         });
       }
  
       if (base64Matches.length > 0) {
-        $btn.textContent = `同步图片中 (0/${base64Matches.length})...`;
         for (let i = 0; i < base64Matches.length; i++) {
           const m = base64Matches[i];
-          
-          // 重新计算哈希
           const binaryString = atob(m.data);
           const bytes = new Uint8Array(binaryString.length);
           for (let k = 0; k < binaryString.length; k++) {
@@ -1625,19 +1660,16 @@
           
           try {
             await GITHUB_CMS.commitRaw(path, m.data, `Auto-upload blog image: ${fileName}`);
-            // 安全替换：只替换 src 部分，保留其他属性 (width, alt 等)
             const updatedTag = m.fullTag.replace(m.dataUrl, `/${path}`);
             body = body.replace(m.fullTag, updatedTag);
-            $btn.textContent = `同步图片中 (${i + 1}/${base64Matches.length})...`;
+            updateLoadingText(`解析并上传正文图片 (${i + 1}/${base64Matches.length})...`);
           } catch (err) {
             console.error('自动同步图片失败:', err);
-            // 这里我们不中断，但保留 base64 还是报错？建议报错中断。
             throw new Error(`图片 ${i + 1} 同步至 GitHub 失败，请检查网络或重试`);
           }
         }
       }
 
-      // 封面裁切处理
       if (image && coverImgEl) {
         try { image = getCroppedBase64(); } catch (e) { console.warn('裁切失败', e); }
       }
@@ -1657,136 +1689,112 @@
         ''
       ].filter(l => l !== '').join('\n');
 
-      // 1. 保存 .md 文件到 GitHub
       await GITHUB_CMS.commitFile(`content/blog/${slug}.md`, frontmatter, `Update article: ${title}`);
 
-      // 2. 更新文章列表索引
       const articleEntry = { slug, title, date, updated, draft, excerpt, cardColor, image };
       const existingIdx = articles.findIndex(p => p.slug === slug);
       if (existingIdx >= 0) articles[existingIdx] = articleEntry;
       else articles.unshift(articleEntry);
 
-      // 3. 上传更新后的 index.json
       await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), 'Sync blog index');
 
-      // 模拟更新本地状态
       localStorage.setItem('cms_index', JSON.stringify(articles));
       $updatedInput.value = updated.slice(0, 16).replace(' ', 'T');
       clearLocalStorage();
       renderArticleList();
       showToast('文章内容已同步到 GitHub', 'success');
-      if ($syncOverlay) $syncOverlay.style.display = 'none';
       showList();
       await loadArticles(); 
     } catch (e) {
       console.error('发布失败:', e);
       showToast('发布失败: ' + e.message, 'error');
-      if (document.getElementById('article-sync-overlay')) {
-        document.getElementById('article-sync-overlay').style.display = 'none';
-      }
     } finally {
       $btn.disabled = false;
       $btn.textContent = oldText;
+      setGlobalLoading(false);
     }
   }
 
   /**
    * 图片回收逻辑
-   * 扫描所有文章 body，与 blog_image 文件夹对比，删除无引用文件。
    */
   async function recycleBlogImages() {
+    if (isProcessing) return;
     try {
-      showToast('正在初始化扫描...', 'info');
-      // 1. 获取所有文章 slug
+      setGlobalLoading(true, '正在扫描冗余图片...');
       const slugs = articles.map(a => a.slug);
       const usedImages = new Set();
       
-      // 2. 遍历拉取每个文章内容
-      showToast(`正在扫描正文 (共 ${slugs.length} 篇)...`, 'info');
-      
+      updateLoadingText(`正在扫描正文 (共 ${slugs.length} 篇)...`);
       for (const slug of slugs) {
         try {
           const res = await fetch(`/content/blog/${slug}.md?t=${Date.now()}`);
           if (!res.ok) continue;
           const text = await res.text();
-          // 匹配 /content/blog/blog_image/ 路径
           const regex = /\/content\/blog\/blog_image\/img-[a-zA-Z0-9]+\.[a-zA-Z0-9]+/g;
           let m;
           while ((m = regex.exec(text)) !== null) {
-            usedImages.add(m[0].split('/').pop()); // 只存文件名
+            usedImages.add(m[0].split('/').pop());
           }
-        } catch (e) {
-          console.warn(`Scan failed for ${slug}`, e);
-        }
+        } catch (e) {}
       }
 
-      // 3. 获取 blog_image 文件夹所有文件
-      showToast('拉取仓库文件列表...', 'info');
+      updateLoadingText('正在拉取文件列表...');
       const files = await GITHUB_CMS.listDir('content/blog/blog_image');
       const repoFiles = files.filter(f => f.type === 'file' && f.name !== '.gitkeep');
-      
-      // 4. 计算孤儿文件
       const orphans = repoFiles.filter(f => !usedImages.has(f.name));
       
       if (orphans.length === 0) {
-        showToast('未发现冗余图片，仓库很干净', 'success');
+        showToast('仓库很干净', 'success');
         return;
       }
 
-      if (!confirm(`扫描完成：\n正引用图片：${usedImages.size} 张\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
+      if (!confirm(`扫描完成：\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
         return;
       }
 
-      // 5. 执行删除
       let successCount = 0;
       for (const file of orphans) {
         try {
+          updateLoadingText(`正在清理 (${successCount + 1}/${orphans.length})...`);
           await GITHUB_CMS.deleteFile(file.path, `Recycle unused image: ${file.name}`);
           successCount++;
-          showToast(`已清理 (${successCount}/${orphans.length})...`, 'info');
-        } catch (e) {
-          console.error(`Recycle failed for ${file.name}`, e);
-        }
+        } catch (e) {}
       }
 
-      showToast(`清理完成！共删除 ${successCount} 张过期图片`, 'success');
+      showToast(`清理完成！共删除 ${successCount} 张图片`, 'success');
     } catch (e) {
-      console.error('图片回收失败', e);
       showToast('回收失败: ' + e.message, 'error');
+    } finally {
+      setGlobalLoading(false);
     }
   }
 
   // ---- 删除文章 ----
   async function deleteArticle(slug) {
-    if (!confirm(`确定要彻底删除文章 [${slug}] 吗？\n此操作将同步删除 GitHub 上的源文件，无法撤销。`)) return;
+    if (isProcessing) return;
+    if (!confirm(`确定要彻底删除文章 [${slug}] 吗？`)) return;
 
     try {
-      showToast('正在从 GitHub 删除...', 'info');
-
-      // 1. 从内存和本地存储中移除
+      setGlobalLoading(true, '正在从 GitHub 删除文章...');
       articles = articles.filter(p => p.slug !== slug);
       localStorage.setItem('cms_index', JSON.stringify(articles));
       
       const saved = JSON.parse(localStorage.getItem('cms_saved') || '[]');
-      const newSaved = saved.filter(s => s.slug !== slug);
-      localStorage.setItem('cms_saved', JSON.stringify(newSaved));
+      localStorage.setItem('cms_saved', JSON.stringify(saved.filter(s => s.slug !== slug)));
 
-      // 1. 删除 GitHub 上的 .md 文件
       await GITHUB_CMS.deleteFile(`content/blog/${slug}.md`, `Delete article file: ${slug}`);
-
-      // 2. 同步更新 GitHub 上的 index.json
       await GITHUB_CMS.commitFile('content/blog/index.json', JSON.stringify(articles, null, 2), `Delete article index: ${slug}`);
 
       renderArticleList();
-      showToast('文章及源文件已从 GitHub 彻底删除', 'success');
+      showToast('文章及源文件已删除', 'success');
     } catch (e) {
-      console.error('删除失败:', e);
-      showToast('同步删除失败: ' + e.message, 'error');
-      // 失败时建议用户手动刷新以对齐状态
+      showToast('删除失败: ' + e.message, 'error');
+    } finally {
+      setGlobalLoading(false);
     }
   }
 
-  // ---- 工具函数 ----
   function escHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -1795,73 +1803,6 @@
 
   function escAttr(str) {
     return str.replace(/"/g, '&quot;');
-  }
-
-
-  /**
-   * 图片回收逻辑
-   * 扫描所有文章 body，与 blog_image 文件夹对比，删除无引用文件。
-   */
-  async function recycleBlogImages() {
-    try {
-      showToast('正在初始化扫描...', 'info');
-      // 1. 获取所有文章 slug
-      const slugs = articles.map(a => a.slug);
-      const usedImages = new Set();
-      
-      // 2. 遍历拉取每个文章内容
-      showToast(`正在扫描正文 (共 ${slugs.length} 篇)...`, 'info');
-      
-      for (const slug of slugs) {
-        try {
-          const res = await fetch(`/content/blog/${slug}.md?t=${Date.now()}`);
-          if (!res.ok) continue;
-          const text = await res.text();
-          // 匹配 /content/blog/blog_image/ 路径
-          const regex = /\/content\/blog\/blog_image\/img-[a-zA-Z0-9]+\.[a-zA-Z0-9]+/g;
-          let m;
-          while ((m = regex.exec(text)) !== null) {
-            usedImages.add(m[0].split('/').pop()); // 只存文件名
-          }
-        } catch (e) {
-          console.warn(`Scan failed for ${slug}`, e);
-        }
-      }
-
-      // 3. 获取 blog_image 文件夹所有文件
-      showToast('拉取仓库文件列表...', 'info');
-      const files = await GITHUB_CMS.listDir('content/blog/blog_image');
-      const repoFiles = files.filter(f => f.type === 'file' && f.name !== '.gitkeep');
-      
-      // 4. 计算孤儿文件
-      const orphans = repoFiles.filter(f => !usedImages.has(f.name));
-      
-      if (orphans.length === 0) {
-        showToast('未发现冗余图片，仓库很干净', 'success');
-        return;
-      }
-
-      if (!confirm(`扫描完成：\n正引用图片：${usedImages.size} 张\n待清理冗余：${orphans.length} 张\n\n确定彻底从 GitHub 删除这些冗余文件吗？`)) {
-        return;
-      }
-
-      // 5. 执行删除
-      let successCount = 0;
-      for (const file of orphans) {
-        try {
-          await GITHUB_CMS.deleteFile(file.path, `Recycle unused image: ${file.name}`);
-          successCount++;
-          showToast(`已清理 (${successCount}/${orphans.length})...`, 'info');
-        } catch (e) {
-          console.error(`Recycle failed for ${file.name}`, e);
-        }
-      }
-
-      showToast(`清理完成！共删除 ${successCount} 张过期图片`, 'success');
-    } catch (e) {
-      console.error('图片回收失败', e);
-      showToast('回收失败: ' + e.message, 'error');
-    }
   }
 
   function showToast(msg, type = 'success') {
