@@ -21,108 +21,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Rebuild blog index.json
-        run: |
-          mkdir -p content/blog
-          cd content/blog
-          cat << 'EOF' > builder.py
-          import os, json, re
-          try:
-              files = [f for f in os.listdir('.') if f.endswith('.md')]
-              out = []
-              for f in files:
-                  try:
-                      with open(f, 'r', encoding='utf-8') as file:
-                          content = file.read()
-                      match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-                      if match:
-                          meta = {}
-                          for line in match.group(1).split('\n'):
-                              if ':' in line:
-                                  k, v = line.split(':', 1)
-                                  k = k.strip()
-                                  v = v.strip().strip('"').strip("'")
-                                  meta[k] = v
-                          meta['slug'] = f[:-3]
-                          out.append(meta)
-                  except Exception as e:
-                      print(f'Skipping file {f} due to error: {e}')
-              out.sort(key=lambda x: x.get('updated') if x.get('updated') else x.get('date', ''), reverse=True)
-              with open('index.json', 'w', encoding='utf-8') as w:
-                  json.dump(out, w, indent=2, ensure_ascii=False)
-          except Exception as e:
-              print(f'Fatal error rebuilding blog index: {e}')
-              with open('index.json', 'w', encoding='utf-8') as w:
-                  w.write('[]')
-          EOF
-          python3 builder.py
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Rebuild gallery index.json
-        run: |
-          cd content/gallery
-          cat << 'EOF' > builder.py
-          import os, json
-          try:
-              items_dir = 'items'
-              images_dir = 'images'
-              out = []
-              print(f"Starting build. Items: {items_dir}, Images: {images_dir}")
-              
-              if os.path.exists(items_dir):
-                  files = [f for f in os.listdir(items_dir) if f.endswith('.json')]
-                  for f in files:
-                      f_path = os.path.join(items_dir, f)
-                      try:
-                          with open(f_path, 'r', encoding='utf-8-sig') as f_in:
-                              data = json.load(f_in)
-                          
-                          # Verify images exist
-                          if data and 'images' in data:
-                              valid_entries = []
-                              for item in data['images']:
-                                  img_path = item.get('image', '').lstrip('/')
-                                  # img_path is like content/gallery/images/xxx.jpg
-                                  # Since we are in content/gallery, we check relatively or from root
-                                  # The path in repo is content/gallery/images/xxx.jpg
-                                  # Being in content/gallery, checking 'images/xxx.jpg' is correct.
-                                  rel_img_path = img_path.replace('content/gallery/', '')
-                                  
-                                  if os.path.exists(rel_img_path):
-                                      valid_entries.append(item)
-                                  else:
-                                      print(f"  Warning: Image {rel_img_path} MISSING for {f}")
-                              
-                              if valid_entries:
-                                  data['images'] = valid_entries
-                                  out.append(data)
-                      except Exception as e:
-                          print(f'Error reading {f}: {e}')
-              
-              # Sort by date
-              out.sort(key=lambda x: str(x.get('date', '')), reverse=True)
-              print(f"Total valid entries: {len(out)}")
-              
-              # Write index.json (UTF-8 No BOM)
-              with open('index.json', 'w', encoding='utf-8') as w:
-                  json.dump(out, w, indent=2, ensure_ascii=False)
-              print("Successfully wrote index.json")
-          except Exception as e:
-              print(f'Fatal error rebuilding gallery index: {e}')
-              exit(1)
-          EOF
-          python3 builder.py
+      - name: Install dependencies
+        run: pip install Pillow
 
-      - name: Generate build version
-        run: |
-          python3 -c "import json, time; f=open('content/version.json', 'w'); json.dump({'version': int(time.time() * 1000)}, f); f.close()"
+      - name: Rebuild all content indexes and thumbnails
+        run: python3 build_index.py
 
-      - name: Commit updated indexes
+      - name: Commit updated changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # 1. 暂存本地改动
-          git add content/blog/index.json content/gallery/index.json content/version.json
+          # 1. 暂存改动 (包含索引、版本号和生成的缩略图)
+          git add content/blog/index.json content/gallery/index.json content/gallery/thumbnails/*.webp content/version.json
           
           # 2. 检查是否有实际差异
           if git diff --cached --quiet; then
@@ -131,7 +47,7 @@ jobs:
           fi
 
           # 3. 尝试提交
-          git commit -m "chore: rebuild content indexes [skip ci]"
+          git commit -m "chore: rebuild content indexes and thumbnails [skip ci]"
           
           # 4. 稳健的推送逻辑 (带重试与冲突解决)
           MAX_RETRIES=3
@@ -143,18 +59,18 @@ jobs:
                 exit 0
               fi
             else
-              echo "Conflict detected, forcing clean re-base and re-generating indexes..."
+              echo "Conflict detected, forcing clean re-base and re-generating content..."
               git rebase --abort || true
               git fetch origin main
               git reset --hard origin/main
-              # 重新运行生成脚本 (此处可精简，关键是同步后的状态)
-              python3 content/blog/builder.py
-              python3 content/gallery/builder.py
-              git add content/blog/index.json content/gallery/index.json content/version.json
-              git commit -m "chore: rebuild content indexes [skip ci] (recovery)" || true
+              # 重新运行统一生成脚本
+              python3 build_index.py
+              git add content/blog/index.json content/gallery/index.json content/gallery/thumbnails/*.webp content/version.json
+              git commit -m "chore: rebuild content indexes and thumbnails [skip ci] (recovery)" || true
             fi
             sleep 2
           done
           
-          # 最后一次硬推（如果重后还是失败）
+          # 最后一次硬推（如果重试还是失败）
           git push --force || echo "Final push attempt failed"
+
