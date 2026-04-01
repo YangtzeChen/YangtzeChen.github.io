@@ -245,22 +245,46 @@
     setupEventListeners();
     setupAuthEventListeners();
 
-    // 检查认证状态
-    if (CMS_AUTH.hasStoredSession()) {
-      // 存在会话，隐藏 Token 输入，仅要求 PIN 码解锁
-      if($authSetupFields) $authSetupFields.style.display = 'none';
-      if($authModal) {
-        $authModal.style.display = 'flex';
-        const card = $authModal.querySelector('.auth-card');
-        if (card) setTimeout(() => card.classList.add('visible'), 50);
+    // 检查是否有存储的 PIN 和时间戳 (30分钟有效)
+    const storedPin = sessionStorage.getItem('cms_session_pin');
+    const storedTs = sessionStorage.getItem('cms_auth_timestamp');
+    const now = Date.now();
+    const expireMs = 30 * 60 * 1000;
+
+    let autoUnlocked = false;
+    if (storedPin && storedTs && (now - parseInt(storedTs) < expireMs)) {
+      const success = await CMS_AUTH.unlock(storedPin);
+      if (success) {
+        sessionStorage.setItem('cms_auth_timestamp', now); // 活跃即续期
+        autoUnlocked = true;
+        $authModal.style.display = 'none';
+        await loadArticles();
+        
+        // 恢复 Tab
+        const activeTab = sessionStorage.getItem('cms_active_tab');
+        if (activeTab === 'gallery') {
+          showGallery();
+        } else {
+          showList();
+        }
       }
-    } else {
-      // 全新会话，要求输入 Token + PIN
-      if($authSetupFields) $authSetupFields.style.display = 'block';
-      if($authModal) {
-        $authModal.style.display = 'flex';
-        const card = $authModal.querySelector('.auth-card');
-        if (card) setTimeout(() => card.classList.add('visible'), 50);
+    }
+
+    if (!autoUnlocked) {
+      if (CMS_AUTH.hasStoredSession()) {
+        if($authSetupFields) $authSetupFields.style.display = 'none';
+        if($authModal) {
+          $authModal.style.display = 'flex';
+          const card = $authModal.querySelector('.auth-card');
+          if (card) setTimeout(() => card.classList.add('visible'), 50);
+        }
+      } else {
+        if($authSetupFields) $authSetupFields.style.display = 'block';
+        if($authModal) {
+          $authModal.style.display = 'flex';
+          const card = $authModal.querySelector('.auth-card');
+          if (card) setTimeout(() => card.classList.add('visible'), 50);
+        }
       }
     }
 
@@ -296,9 +320,21 @@
       }
 
       if (success) {
+        // 记录 Session (30分钟有效)
+        sessionStorage.setItem('cms_session_pin', pin);
+        sessionStorage.setItem('cms_auth_timestamp', Date.now());
+        
         $authModal.style.display = 'none';
         showToast('认证成功，已进入加密会话', 'success');
         await loadArticles();
+        
+        // 登录成功时默认根据存储显示 Tab
+        const activeTab = sessionStorage.getItem('cms_active_tab');
+        if (activeTab === 'gallery') {
+          showGallery();
+        } else {
+          showList();
+        }
       } else {
         showToast('认证失败：PIN 码错误或记录冲突', 'error');
       }
@@ -472,6 +508,7 @@
     if (tabArticles) tabArticles.classList.add('active');
     stopAutoSave();
     currentEditSlug = null;
+    sessionStorage.setItem('cms_active_tab', 'articles');
   }
 
   function showGallery() {
@@ -483,6 +520,7 @@
     if (tabGallery) tabGallery.classList.add('active');
     stopAutoSave();
     loadGalleryManagement();
+    sessionStorage.setItem('cms_active_tab', 'gallery');
   }
 
   function resetForm() {

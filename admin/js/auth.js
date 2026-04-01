@@ -97,6 +97,9 @@ const CMS_AUTH = (function() {
 
   function logout() {
     sessionStorage.removeItem('cms_auth_burn');
+    sessionStorage.removeItem('cms_session_pin');
+    sessionStorage.removeItem('cms_auth_timestamp');
+    sessionStorage.removeItem('cms_active_tab');
     decryptedToken = null;
     location.reload();
   }
