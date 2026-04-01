@@ -853,13 +853,13 @@ input:checked + .slider:before {
 /* --- 相册管理 (Gallery Management) --- */
 .gallery-manager-grid {
   columns: 4 250px;
-  column-gap: 1.5rem;
-  padding: 1rem var(--gap);
+  column-gap: 5px;
+  padding: 5px var(--gap);
 }
 
 .gallery-manager-grid .masonry-item {
   break-inside: avoid;
-  margin-bottom: 1.5rem;
+  margin-bottom: 5px;
   position: relative;
   border-radius: 12px;
   overflow: hidden;

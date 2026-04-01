@@ -60,7 +60,7 @@
    * @param {number} seconds 
    * @param {string} title 
    */
-  function startActionCountdown(seconds = 90, title = '上传完成，正在生成缩略图...') {
+  function startActionCountdown(seconds = 60, title = '上传完成，正在生成缩略图...') {
     const textEl = document.getElementById('mutex-text');
     const countdownEl = document.getElementById('mutex-countdown');
     const bar = document.getElementById('mutex-bar');
@@ -678,7 +678,7 @@
       updateGlobalStatus(100, '删除成功', '正在加载...');
 
       showToast('删除成功', 'success');
-      startActionCountdown(90, '照片已删除，正在同步目录...');
+      startActionCountdown(60, '照片已删除，正在同步目录...');
     } catch (e) {
       showToast('删除失败: ' + e.message, 'error');
       setGlobalLoading(false);
@@ -766,7 +766,7 @@
 
       showToast('修改成功', 'success');
       hideUploadModal();
-      startActionCountdown(90, '修改已保存，正在重新索引...');
+      startActionCountdown(60, '修改已保存，正在重新索引...');
     } catch (e) {
       showToast('保存失败: ' + e.message, 'error');
       setGlobalLoading(false);
@@ -840,7 +840,7 @@
 
           showToast('上传成功，索引已同步', 'success');
           hideUploadModal();
-          startActionCountdown(90, '图片上传成功，正在生成缩略图...');
+          startActionCountdown(60, '图片上传成功，正在生成缩略图...');
         } catch (err) {
           console.error('Upload process error:', err);
           showToast('上传失败: ' + err.message, 'error');
