@@ -18,6 +18,8 @@
   let galleryEditImgIdx = -1;
   let isProcessing = false; // 全局状态锁 (UI Mutex Lock)
 
+  let mutexInterval = null;
+
   /**
    * 切换全局加载状态与 UI 锁定
    * @param {boolean} state - true 为上锁，false 为解锁
@@ -29,12 +31,20 @@
     const textEl = document.getElementById('mutex-text');
     const bar = document.getElementById('mutex-bar');
     const stepEl = document.getElementById('mutex-step');
+    const countdownEl = document.getElementById('mutex-countdown');
     
+    // 清除之前的倒计时
+    if (mutexInterval) {
+      clearInterval(mutexInterval);
+      mutexInterval = null;
+    }
+
     if (overlay) {
       overlay.style.display = state ? 'flex' : 'none';
       if (state) {
         if (bar) bar.style.width = '0%';
         if (stepEl) stepEl.textContent = '';
+        if (countdownEl) countdownEl.style.display = 'none';
       }
     }
     if (textEl && text) {
@@ -43,6 +53,39 @@
     
     // 锁定滚动
     document.body.style.overflow = state ? 'hidden' : '';
+  }
+
+  /**
+   * 开启强制等待倒计时并自动刷新
+   * @param {number} seconds 
+   * @param {string} title 
+   */
+  function startActionCountdown(seconds = 90, title = '上传完成，正在生成缩略图...') {
+    const textEl = document.getElementById('mutex-text');
+    const countdownEl = document.getElementById('mutex-countdown');
+    const bar = document.getElementById('mutex-bar');
+    const stepEl = document.getElementById('mutex-step');
+
+    setGlobalLoading(true, title);
+    if (countdownEl) {
+      countdownEl.style.display = 'block';
+      countdownEl.textContent = seconds + 's';
+    }
+    if (stepEl) stepEl.textContent = 'GitHub Actions 正在处理，请稍候...';
+
+    let remaining = seconds;
+    const total = seconds;
+
+    mutexInterval = setInterval(() => {
+      remaining--;
+      if (countdownEl) countdownEl.textContent = remaining + 's';
+      if (bar) bar.style.width = ((total - remaining) / total * 100) + '%';
+
+      if (remaining <= 0) {
+        clearInterval(mutexInterval);
+        location.reload();
+      }
+    }, 1000);
   }
 
   /**
@@ -573,7 +616,7 @@
           <button class="btn-icon edit-gallery-btn" data-image="${escAttr(img.image)}">编辑</button>
           <button class="btn-icon danger delete-gallery-btn" data-image="${escAttr(img.image)}">删除</button>
         </div>
-        <img src="${escAttr(img.image)}" alt="${escAttr(img.sub_title)}" loading="lazy">
+        <img src="${escAttr(img.image)}" alt="${escAttr(img.sub_title)}" loading="lazy" onerror="this.onerror=null; this.src='https://placehold.co/100x200?text=Processing';">
         <div class="masonry-overlay">
           <span class="masonry-title">${escHtml(img.sub_title || '无题')}</span>
           <span class="masonry-date">${img.date ? img.date.split(' ')[0] : ''}</span>
@@ -635,10 +678,9 @@
       updateGlobalStatus(100, '删除成功', '正在加载...');
 
       showToast('删除成功', 'success');
-      loadGalleryManagement();
+      startActionCountdown(90, '照片已删除，正在同步目录...');
     } catch (e) {
       showToast('删除失败: ' + e.message, 'error');
-    } finally {
       setGlobalLoading(false);
     }
   }
@@ -724,13 +766,13 @@
 
       showToast('修改成功', 'success');
       hideUploadModal();
-      loadGalleryManagement();
+      startActionCountdown(90, '修改已保存，正在重新索引...');
     } catch (e) {
       showToast('保存失败: ' + e.message, 'error');
+      setGlobalLoading(false);
     } finally {
       $btn.disabled = false;
       $btn.textContent = '保存修改';
-      setGlobalLoading(false);
     }
   }
 
@@ -796,11 +838,9 @@
 
           updateGlobalStatus(100, '上传成功', '同步完成！');
 
-          setGlobalLoading(false);
           showToast('上传成功，索引已同步', 'success');
-          
           hideUploadModal();
-          loadGalleryManagement();
+          startActionCountdown(90, '图片上传成功，正在生成缩略图...');
         } catch (err) {
           console.error('Upload process error:', err);
           showToast('上传失败: ' + err.message, 'error');
