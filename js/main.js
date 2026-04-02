@@ -662,7 +662,7 @@
           p.images.forEach(img => latestImages.push({ post: p, img: img }));
         }
       }
-      latestImages = latestImages.slice(0, 8); // 取最新8张 (保持与原逻辑一致)
+      latestImages = latestImages.slice(0, 9); // 取最新9张 (填充3x3网格)
 
       if (latestImages.length === 0) {
         container.innerHTML = `
@@ -674,7 +674,7 @@
         return;
       }
 
-      latestImages.forEach((data) => {
+      latestImages.forEach((data, index) => {
         const item = document.createElement('div');
         item.className = 'masonry-item fade-in';
         item.setAttribute('data-image', data.img.image);
@@ -705,7 +705,10 @@
         const preloadOrig = new Image();
         preloadOrig.src = data.img.image;
 
-        requestAnimationFrame(() => item.classList.add('visible'));
+        // Stagger the entrance animation
+        setTimeout(() => {
+          requestAnimationFrame(() => item.classList.add('visible'));
+        }, index * 50);
       });
 
       // Use event delegation for Homepage
