@@ -1,0 +1,9 @@
+---
+title: "TESTTEXTtitle"
+date: "2026-04-03 14:41:00"
+updated: "2026-04-03 14:41:29"
+draft: false
+excerpt: "TESTTEXTabstract"
+cardColor: "#68A1AE"
+---
+<p>TESTTEXTcontent</p>
