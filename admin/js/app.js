@@ -1806,15 +1806,14 @@
       clearLocalStorage();
       renderArticleList();
       showToast('文章内容已同步到 GitHub', 'success');
-      showList();
-      await loadArticles(); 
+      startActionCountdown(60, '文章已发布，正在重新索引...');
     } catch (e) {
       console.error('发布失败:', e);
       showToast('发布失败: ' + e.message, 'error');
+      setGlobalLoading(false);
     } finally {
       $btn.disabled = false;
       $btn.textContent = oldText;
-      setGlobalLoading(false);
     }
   }
 
@@ -1870,9 +1869,9 @@
       updateGlobalStatus(100, '清理完成', '完成同步');
 
       showToast(`清理完成！共删除 ${successCount} 张图片`, 'success');
+      startActionCountdown(60, '清理完成，正在同步目录...');
     } catch (e) {
       showToast('回收失败: ' + e.message, 'error');
-    } finally {
       setGlobalLoading(false);
     }
   }
@@ -1898,9 +1897,9 @@
 
       renderArticleList();
       showToast('文章及源文件已删除', 'success');
+      startActionCountdown(60, '文章已删除，正在同步目录...');
     } catch (e) {
       showToast('删除失败: ' + e.message, 'error');
-    } finally {
       setGlobalLoading(false);
     }
   }
